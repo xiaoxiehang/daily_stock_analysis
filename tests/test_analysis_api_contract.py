@@ -39,7 +39,7 @@ except Exception:  # pragma: no cover - optional dependency environments
 from src.enums import ReportType
 from src.services.analysis_service import AnalysisService
 from src.services.image_stock_extractor import _call_litellm_vision
-from src.services.task_queue import AnalysisTaskQueue
+from src.services.task_queue import AnalysisTaskQueue, TaskStatus
 
 
 class AnalysisApiContractTestCase(unittest.TestCase):
@@ -321,6 +321,45 @@ class AnalysisApiContractTestCase(unittest.TestCase):
                 )
 
         release_market_review_lock.assert_called_once_with(lock_token)
+
+    def test_run_market_review_background_runtime_build_failure_marks_task_failed(self) -> None:
+        if analysis_endpoint_module is None:
+            self.skipTest("analysis endpoint helpers unavailable in this environment")
+
+        class _SyncExecutor:
+            def submit(self, fn, *args, **kwargs):
+                future = Future()
+                try:
+                    future.set_result(fn(*args, **kwargs))
+                except Exception as exc:  # pragma: no cover - exercised via assert below
+                    future.set_exception(exc)
+                return future
+
+        queue = AnalysisTaskQueue(max_workers=1)
+        queue._executor = _SyncExecutor()
+        with patch.object(
+            analysis_endpoint_module,
+            "_build_market_review_runtime",
+            side_effect=RuntimeError("runtime init failed"),
+        ), patch.object(analysis_endpoint_module, "_release_market_review_lock") as release_market_review_lock:
+            task = queue.submit_background_task(
+                lambda: analysis_endpoint_module._run_market_review_background(
+                    send_notification=False,
+                    override_region="cn",
+                    lock_token=object(),
+                    config=SimpleNamespace(),
+                ),
+                stock_code="market_review",
+                stock_name="大盘复盘",
+                message="大盘复盘任务已提交",
+            )
+
+        task_info = queue.get_task(task.task_id)
+        self.assertIsNotNone(task_info)
+        self.assertEqual(task_info.status, TaskStatus.FAILED)
+        self.assertEqual(task_info.error, "runtime init failed")
+        self.assertEqual(task_info.message, "任务失败: runtime init failed")
+        release_market_review_lock.assert_called_once()
 
     def test_get_analysis_status_completed_db_snapshot_preserves_zero_change_pct(self) -> None:
         if get_analysis_status is None:

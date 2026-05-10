@@ -196,6 +196,24 @@ class MarketCommandRegionFilterTestCase(unittest.TestCase):
         kwargs = market_review_module.run_market_review.call_args.kwargs
         self.assertIsNone(kwargs.get("override_region"))
 
+    def test_build_market_review_runtime_failure_still_releases_lock(self) -> None:
+        """Runtime construction failure should still release the command-level lock token."""
+        message = _make_message()
+        config, notifier, runtime_analyzer, runtime_search, market_review_module, runtime_module, _ = self._patch_dependencies(
+            market_review_region="cn",
+            open_markets={"cn"},
+        )
+
+        cmd = MarketCommand()
+        lock_token = object()
+        runtime_module.build_market_review_runtime.side_effect = RuntimeError("runtime init failed")
+        with patch.object(cmd, "_release_market_review_lock") as release_market_review_lock:
+            cmd._run_market_review(message, config, lock_token)
+
+        release_market_review_lock.assert_called_once_with(lock_token)
+        market_review_module.run_market_review.assert_not_called()
+        self.assertIsNotNone(notifier)
+
 
 if __name__ == "__main__":
     unittest.main()
