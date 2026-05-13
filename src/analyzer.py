@@ -2282,7 +2282,7 @@ class GeminiAnalyzer:
 
                 content = self._extract_completion_text(response)
                 if content:
-                    usage = self._normalize_usage(getattr(response, "usage", None))
+                    usage = self._normalize_usage(self._get_response_field(response, "usage"))
                     last_response_text = content
                     last_model = model
                     last_usage = usage

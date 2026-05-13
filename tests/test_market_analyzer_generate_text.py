@@ -200,6 +200,37 @@ class TestAnalyzerGenerateText:
         assert model_used == "openai/deepseek-chat"
         assert usage == {}
 
+    def test_call_litellm_extracts_list_message_content_from_dict_response(self):
+        analyzer = self._make_analyzer()
+        analyzer._config_override = SimpleNamespace(
+            litellm_model="openai/list-content-provider",
+            litellm_fallback_models=[],
+            llm_model_list=[],
+        )
+        response = {
+            "choices": [
+                {
+                    "message": {
+                        "content": [
+                            {"type": "text", "text": "list "},
+                            {"type": "text", "text": "response"},
+                        ],
+                    },
+                }
+            ],
+            "usage": {"prompt_tokens": 3, "completion_tokens": 4, "total_tokens": 7},
+        }
+
+        with patch.object(analyzer, "_dispatch_litellm_completion", return_value=response):
+            text, model_used, usage = analyzer._call_litellm(
+                "prompt",
+                {"max_tokens": 128, "temperature": 0.2},
+            )
+
+        assert text == "list response"
+        assert model_used == "openai/list-content-provider"
+        assert usage == {"prompt_tokens": 3, "completion_tokens": 4, "total_tokens": 7}
+
     def test_call_litellm_normalizes_kimi_k26_temperature(self):
         analyzer = self._make_analyzer()
         analyzer._config_override = SimpleNamespace(
