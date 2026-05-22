@@ -168,6 +168,9 @@ class TestTushareFetcherFollowUps(unittest.TestCase):
         fetcher = self._make_fetcher()
         fetcher._api.quotation.side_effect = Exception("quota")
 
+        self.assertEqual(fetcher._get_legacy_realtime_symbol("SH.000001"), "sh000001")
+        self.assertEqual(fetcher._get_legacy_realtime_symbol("SZ.000001"), "000001")
+
         tushare_module = sys.modules["tushare"]
         tushare_module.get_realtime_quotes.return_value = pd.DataFrame(
             [

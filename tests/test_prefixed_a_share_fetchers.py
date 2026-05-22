@@ -25,15 +25,15 @@ class _RecordingDailyFetcher:
 
 
 class TestDataFetcherManagerPrefixedAShareCodes(unittest.TestCase):
-    def test_get_daily_data_normalizes_dotted_exchange_prefix_before_fetcher(self) -> None:
+    def test_get_daily_data_preserves_dotted_exchange_prefix_before_fetcher(self) -> None:
         fetcher = _RecordingDailyFetcher()
         manager = DataFetcherManager(fetchers=[fetcher])
 
-        df, source = manager.get_daily_data("SH.601888", days=1)
+        df, source = manager.get_daily_data("SH.000001", days=1)
 
         self.assertFalse(df.empty)
         self.assertEqual(source, "RecordingDailyFetcher")
-        self.assertEqual(fetcher.calls, ["601888"])
+        self.assertEqual(fetcher.calls, ["SH.000001"])
 
 
 class TestBaostockPrefixedAShareCodes(unittest.TestCase):

@@ -253,6 +253,12 @@ class PytdxFetcher(BaseFetcher):
         """
         raw_code = stock_code.strip()
         upper = raw_code.upper()
+
+        if upper.startswith(('SH.', 'SS.', 'SZ.')):
+            prefix, code = upper.split('.', 1)
+            if code.isdigit() and len(code) == 6:
+                return (1 if prefix in ('SH', 'SS') else 0), code
+
         code = normalize_stock_code(raw_code)
 
         if upper.startswith(('SH', 'SS')) or upper.endswith(('.SH', '.SS')):
