@@ -116,6 +116,7 @@ class PytdxFetcher(BaseFetcher):
     
     name = "PytdxFetcher"
     priority = int(os.getenv("PYTDX_PRIORITY", "2"))
+    supports_dotted_a_share_prefix = True
     
     # 默认通达信行情服务器列表
     DEFAULT_HOSTS = [

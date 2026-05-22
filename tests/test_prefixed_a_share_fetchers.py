@@ -24,8 +24,13 @@ class _RecordingDailyFetcher:
         return pd.DataFrame({"date": ["2026-05-22"], "close": [10.0]})
 
 
+class _DottedAwareDailyFetcher(_RecordingDailyFetcher):
+    name = "DottedAwareDailyFetcher"
+    supports_dotted_a_share_prefix = True
+
+
 class TestDataFetcherManagerPrefixedAShareCodes(unittest.TestCase):
-    def test_get_daily_data_preserves_dotted_exchange_prefix_before_fetcher(self) -> None:
+    def test_get_daily_data_normalizes_dotted_exchange_prefix_for_default_fetcher(self) -> None:
         fetcher = _RecordingDailyFetcher()
         manager = DataFetcherManager(fetchers=[fetcher])
 
@@ -33,6 +38,16 @@ class TestDataFetcherManagerPrefixedAShareCodes(unittest.TestCase):
 
         self.assertFalse(df.empty)
         self.assertEqual(source, "RecordingDailyFetcher")
+        self.assertEqual(fetcher.calls, ["000001"])
+
+    def test_get_daily_data_preserves_dotted_exchange_prefix_for_supported_fetcher(self) -> None:
+        fetcher = _DottedAwareDailyFetcher()
+        manager = DataFetcherManager(fetchers=[fetcher])
+
+        df, source = manager.get_daily_data("SH.000001", days=1)
+
+        self.assertFalse(df.empty)
+        self.assertEqual(source, "DottedAwareDailyFetcher")
         self.assertEqual(fetcher.calls, ["SH.000001"])
 
 

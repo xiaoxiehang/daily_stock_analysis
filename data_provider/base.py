@@ -309,6 +309,7 @@ class BaseFetcher(ABC):
     
     name: str = "BaseFetcher"
     priority: int = 99  # 优先级数字越小越优先
+    supports_dotted_a_share_prefix: bool = False
     
     @abstractmethod
     def _fetch_raw_data(self, stock_code: str, start_date: str, end_date: str) -> pd.DataFrame:
@@ -582,6 +583,19 @@ class DataFetcherManager:
         "FinnhubFetcher": {"us"},
         "AlphaVantageFetcher": {"us"},
     }
+
+    @staticmethod
+    def _select_daily_stock_code_for_fetcher(
+        fetcher: BaseFetcher,
+        raw_stock_code: str,
+        normalized_stock_code: str,
+    ) -> str:
+        if (
+            _has_dotted_a_share_prefix(raw_stock_code)
+            and getattr(fetcher, "supports_dotted_a_share_prefix", False)
+        ):
+            return raw_stock_code
+        return normalized_stock_code
     
     def __init__(self, fetchers: Optional[List[BaseFetcher]] = None):
         """
@@ -1167,7 +1181,6 @@ class DataFetcherManager:
         raw_stock_code = (stock_code or "").strip()
         # Normalize for market routing and shared cache/dedupe equivalence.
         stock_code = normalize_stock_code(stock_code)
-        fetch_stock_code = raw_stock_code if _has_dotted_a_share_prefix(raw_stock_code) else stock_code
 
         fetchers = self._get_fetchers_snapshot()
         errors = []
@@ -1247,6 +1260,11 @@ class DataFetcherManager:
 
         for attempt, fetcher in enumerate(fetchers, start=1):
             try:
+                fetch_stock_code = self._select_daily_stock_code_for_fetcher(
+                    fetcher,
+                    raw_stock_code,
+                    stock_code,
+                )
                 logger.info(f"[数据源尝试 {attempt}/{total_fetchers}] [{fetcher.name}] 获取 {stock_code}...")
                 df = self._call_fetcher_method(
                     fetcher,
