@@ -180,6 +180,7 @@ class RunDiagnosticsP2TestCase(unittest.TestCase):
 
         self.assertEqual(summary["status"], "failed")
         self.assertEqual(summary["components"]["llm"]["status"], "failed")
+        self.assertIn("LLM 失败", summary["reason"])
         self.assertNotIn("secret-value", summary["copy_text"])
 
     def test_legacy_report_without_diagnostics_returns_unknown(self) -> None:

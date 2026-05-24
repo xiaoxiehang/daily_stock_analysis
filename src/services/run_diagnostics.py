@@ -753,9 +753,16 @@ def build_run_diagnostic_summary(
             (
                 component.message
                 for component in components.values()
-                if component.status in {"failed", "degraded"}
+                if component.status == "failed"
             ),
-            _SUMMARY_STATUS_LABELS[status],
+            next(
+                (
+                    component.message
+                    for component in components.values()
+                    if component.status == "degraded"
+                ),
+                _SUMMARY_STATUS_LABELS[status],
+            ),
         )
 
     trace_id = diagnostics.get("trace_id") or snapshot.get("trace_id") or raw.get("trace_id")
