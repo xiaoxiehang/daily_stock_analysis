@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { historyApi } from '../../../api/history';
@@ -82,5 +83,20 @@ describe('ReportDiagnostics', () => {
     expect(historyApi.getDiagnostics).not.toHaveBeenCalled();
     expect(screen.getByText('数据可靠性')).toBeInTheDocument();
     expect(screen.getByText('部分降级')).toBeInTheDocument();
+  });
+
+  it('refetches diagnostics after StrictMode cleans up the first effect run', async () => {
+    vi.mocked(historyApi.getDiagnostics).mockResolvedValue(diagnosticSummary);
+
+    render(
+      <StrictMode>
+        <ReportDiagnostics recordId={1} />
+      </StrictMode>,
+    );
+
+    await waitFor(() => {
+      expect(historyApi.getDiagnostics).toHaveBeenCalledTimes(2);
+    });
+    expect(await screen.findByText('数据可靠性')).toBeInTheDocument();
   });
 });

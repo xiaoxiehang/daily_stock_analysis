@@ -144,16 +144,14 @@ export const ReportDiagnostics: React.FC<ReportDiagnosticsProps> = ({
     failed: false,
   });
   const [copied, setCopied] = useState(false);
-  const requestedRecordIdRef = useRef<number | null>(null);
   const resetCopiedTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (summary || !recordId || requestedRecordIdRef.current === recordId) {
+    if (summary || !recordId) {
       return undefined;
     }
 
     let active = true;
-    requestedRecordIdRef.current = recordId;
     void historyApi.getDiagnostics(recordId)
       .then((result) => {
         if (active) {
