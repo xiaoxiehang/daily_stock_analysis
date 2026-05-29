@@ -342,7 +342,7 @@ For the notification baseline, diagnostics, and deployment notes, see [Notificat
 | `MARKET_REVIEW_REGION` | Market review region: cn (A-shares), hk (HK stocks), us (US stocks), both (all three markets) | `cn` |
 | `MARKET_REVIEW_COLOR_SCHEME` | Index change color style in market reviews: `green_up` = green gains/red losses (default), `red_up` = red gains/green losses | `green_up` |
 | `SCHEDULE_ENABLED` | Enable scheduled tasks | `false` |
-| `SCHEDULE_TIME` | Scheduled execution time | `18:00` |
+| `SCHEDULE_TIME` | Local built-in scheduler execution time; GitHub Actions trigger time is still controlled by workflow `cron` | `18:00` |
 | `SCHEDULE_RUN_IMMEDIATELY` | Run once immediately when scheduler mode starts; when unset it keeps following the legacy `RUN_IMMEDIATELY` runtime override | `true` |
 | `RUN_IMMEDIATELY` | Run once immediately for non-scheduler startup; also acts as the legacy fallback when `SCHEDULE_RUN_IMMEDIATELY` is unset | `true` |
 | `LOG_DIR` | Log directory | `./logs` |
@@ -560,7 +560,8 @@ python main.py --workers 5            # Specify concurrency
 GitHub Actions parses `on.schedule.cron` before a job starts, so the cron expression cannot directly
 read Repository Variables, Secrets, or env values. As a result, the `SCHEDULE_TIME` repository
 variable only applies to the built-in local scheduler (`python main.py --schedule`); setting it alone
-does not change the default GitHub Actions trigger time.
+does not change the default GitHub Actions trigger time. This doc update is scope-limited to clarifying
+that limitation.
 
 The default workflow still uses a fixed cron:
 

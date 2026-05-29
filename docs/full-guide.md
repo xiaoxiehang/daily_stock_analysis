@@ -412,7 +412,7 @@ daily_stock_analysis/
 | `MARKET_REVIEW_COLOR_SCHEME` | 大盘复盘指数涨跌颜色：`green_up`=绿涨红跌（默认），`red_up`=红涨绿跌 | `green_up` |
 | `TRADING_DAY_CHECK_ENABLED` | 交易日检查：默认 `true`，非交易日跳过执行；设为 `false` 或使用 `--force-run` 可强制执行（Issue #373） | `true` |
 | `SCHEDULE_ENABLED` | 启用定时任务 | `false` |
-| `SCHEDULE_TIME` | 定时执行时间 | `18:00` |
+| `SCHEDULE_TIME` | 本地内置 scheduler 的每日执行时间；GitHub Actions 默认触发时间仍由 workflow 的 `cron` 决定 | `18:00` |
 | `LOG_DIR` | 日志目录 | `./logs` |
 
 ---
@@ -624,7 +624,7 @@ python main.py --workers 5            # 指定并发数
 GitHub Actions 的 `on.schedule.cron` 在 job 启动前由 GitHub 调度器解析，不能直接读取
 Repository Variables、Secrets 或 env。因此，仓库变量 `SCHEDULE_TIME` 只对本地内置
 `python main.py --schedule` 调度模式生效；在默认 GitHub Actions workflow 中，单独配置
-`SCHEDULE_TIME` 不能改变触发时间。
+`SCHEDULE_TIME` 不能改变触发时间，文档改动仅用于澄清本限制。
 
 默认 workflow 仍使用固定 cron：
 

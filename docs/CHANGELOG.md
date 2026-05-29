@@ -108,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [修复] 问股 single-agent 新增 provider-aware trace 分轨，跨轮保留 DeepSeek V4 thinking + tool-call 的 `reasoning_content` 与工具协议材料。
 - [新功能] 股票自动补全索引默认支持从 GitHub main 远程刷新并缓存到本地，Web/CLI 分析入口失败时自动降级到内置索引，降低摘帽和更名后旧简称污染分析的概率。
 - [修复] 为 Akshare 新浪/腾讯 A 股历史兜底接口增加调用级超时，并补齐 Tushare `605xxx` 沪市代码路由回归测试，避免定时分析因数据源无响应而挂起。
-- [文档] 明确 GitHub Actions `on.schedule.cron` 不能直接读取 Repository Variables，避免误以为 `SCHEDULE_TIME` 可单独改变默认 workflow 触发时间。
+- [文档] 明确 GitHub Actions `on.schedule.cron` 不能读取仓库变量，补齐说明：`SCHEDULE_TIME` 仅作用于本地内置调度逻辑，默认 workflow 触发时间仍由 `cron` 决定，本次改动不涉及 `00-daily-analysis.yml` 行为变更。
 - [修复] 将 `exchange-calendars` 依赖下限提升到 `4.13.0`，避免 pandas 3 环境导入交易日历时因 Timedelta 单位 `T` 失效导致分析失败。
 - [测试] 执行 `python -c "import exchange_calendars as xcals; xcals.get_calendar('XSHG'); print('ok')"` 通过验证，以覆盖导入与交易日历初始化兼容性。
 - [新功能] 普通分析与 Agent 运行时 Prompt 接入 AnalysisContextPack 低敏摘要，保持 history/API/Web 输出兼容。
