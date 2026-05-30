@@ -12,20 +12,17 @@ For English contributors: please fill in English. All fields marked (EN) accept 
 - [ ] chore
 - [ ] test
 
-> 文档 / 治理类 PR 建议仅勾选 `docs`，并避免在该类 PR 使用 `Closes` / `Fixes` 触发自动关闭。
-> 如需关联 Issue，请使用 `Refs #<issue_number>`；无 Issue 时可留空并说明文档边界范围。
-
-> 若该 PR 为 docs-only，请在 Issue Link 仅填写 `Refs #<issue_number>` 或空，不得填写 `Closes` / `Fixes`（避免误关闭 Issue）。
-> PR Type 建议仅勾选 `docs`
+> 文档 / 治理类 PR 建议仅勾选 `docs`，使用 `Refs #<issue_number>`（或空）进行 issue 关联。
+> 运行时能力交付类 PR 按实际交付边界选择 `Fixes` / `Closes` 或 `Refs`。
 
 ## Background And Problem
 
-请描述当前问题、影响范围与触发场景。  
+请描述当前问题、影响范围与触发场景。
 *(EN) Describe the problem, its impact, and what triggers it.*
 
 ## Scope Of Change
 
-请列出本 PR 修改的模块和文件范围。  
+请列出本 PR 修改的模块和文件范围。
 *(EN) List the modules and files changed in this PR.*
 
 ## Acceptance Criteria
@@ -34,10 +31,10 @@ For English contributors: please fill in English. All fields marked (EN) accept 
 
 以下内容仅适用于 **docs/governance-only** PR，非 docs/governance PR 可跳过：
 
-- [ ] **仅说明边界，不新增 runtime 行为**：说明性 PR 不承担 `SCHEDULE_TIME` 或其他运行时能力交付。
-- [ ] **不纳入运行时能力验收**：本 PR 验收不得包含 `SCHEDULE_TIME` 解析、cron 触发、非法格式兼容等 runtime 行为核验项。
-- [ ] **docs-only 自检清单**：边界说明与实际行为一致、双语文档同步、`docs/CHANGELOG.md` 同步（如涉及用户可见文档）；
-- [ ] **Issue 链接语义正确**：文档/治理说明类 PR 请使用 `Refs #<issue_number>`（或无 issue 说明），并将 PR 类型限定为 `docs`，避免误关闭 Issue。
+- [ ] **类型与边界清晰**：若为 docs/governance-only，请在 PR Type 仅勾选 `docs`，并说明不承诺 runtime 行为交付。
+- [ ] **验收范围正确**：本 PR 的验收项仅覆盖文档/治理边界，不包含运行时行为交付项（含调度、触发时点、解析兼容行为）。
+- [ ] **文档交付清单**：边界说明与现有行为一致、双语文档同步（如涉及），并同步 `docs/CHANGELOG.md`（如涉及用户可见文档）。
+- [ ] **Issue 链接语义正确**：文档/治理说明类 PR 请使用 `Refs #<issue_number>`（或无 issue 说明），避免误用 `Closes` / `Fixes`。
 
 
 ## Issue Link
@@ -48,12 +45,12 @@ For English contributors: please fill in English. All fields marked (EN) accept 
 - `Fixes #<issue_number>`（运行时行为交付且确定可关闭 Issue 时使用）
 - 无 Issue 时说明原因与验收标准 / If no issue, explain the motivation and acceptance criteria
 
-> 文档/治理类、仅做边界澄清且不含运行时交付的 PR，请按需使用 `docs + Refs #<issue_number>`，并在 PR 类型中仅勾选 `docs`；避免误触发 Issue 自动关闭。
+> 文档/治理类、仅做边界澄清且不含运行时交付的 PR，请使用 `Refs #<issue_number>`（或空）与 `docs`，避免误触发 Issue 自动关闭。
 > For docs/governance-only changes that only clarify boundaries and do not include runtime delivery, use `docs + Refs #<issue_number>` if needed and keep PR type as `docs` only; avoid auto-closing issues with `Fixes` / `Closes`.
 
 ## Verification Commands And Results
 
-请填写你实际执行过的命令和关键结果（不要只写"已测试"）。  
+请填写你实际执行过的命令和关键结果（不要只写"已测试"）。
 *(EN) Paste the commands you actually ran and their key output (don't just write "tested"):*
 
 ```bash
