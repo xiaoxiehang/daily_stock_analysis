@@ -599,6 +599,7 @@ def test_get_context_skips_generation_when_market_review_lock_is_held() -> None:
         "src.services.daily_market_context.try_acquire_market_review_lock",
         return_value=None,
     ) as acquire_lock, \
+         patch("src.services.daily_market_context.time.sleep"), \
          patch("src.services.daily_market_context.release_market_review_lock") as release_lock, \
          patch("src.services.daily_market_context.run_market_review") as run_review:
         context = service.get_context(
@@ -614,6 +615,47 @@ def test_get_context_skips_generation_when_market_review_lock_is_held() -> None:
     acquire_lock.assert_called_once()
     release_lock.assert_not_called()
     run_review.assert_not_called()
+
+
+def test_get_context_waits_for_market_review_generation_when_lock_is_held() -> None:
+    db = MagicMock()
+    db.get_analysis_history.side_effect = [
+        [],
+        [],
+        [],
+        [_history_record(created_at=datetime(2026, 6, 6, 9, 30))],
+    ]
+    service = DailyMarketContextService(
+        db_manager=db,
+        today_fn=lambda: date(2026, 6, 6),
+    )
+
+    with patch(
+        "src.services.daily_market_context.time.sleep",
+    ) as sleep_mock, \
+         patch(
+            "src.services.daily_market_context.try_acquire_market_review_lock",
+            return_value=None,
+        ) as acquire_lock, \
+         patch("src.services.daily_market_context.release_market_review_lock") as release_lock, \
+         patch("src.services.daily_market_context.run_market_review") as run_review:
+        context = service.get_context(
+            region="cn",
+            config=SimpleNamespace(report_language="zh"),
+            notifier=MagicMock(),
+            analyzer=MagicMock(),
+            search_service=MagicMock(),
+            force_refresh=True,
+        )
+
+    assert context is not None
+    assert context.source == "analysis_history"
+    assert context.summary == "市场退潮，高风险，建议观望，仓位上限30%。"
+    assert sleep_mock.call_count >= 1
+    acquire_lock.assert_called_once()
+    release_lock.assert_not_called()
+    run_review.assert_not_called()
+    assert db.get_analysis_history.call_count == 4
 
 
 def test_readonly_mode_can_still_use_cached_history_without_generation() -> None:

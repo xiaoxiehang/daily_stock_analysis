@@ -7,6 +7,7 @@ import json
 import logging
 import re
 import threading
+import time
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
@@ -31,6 +32,8 @@ _UNTRUSTED_MARKET_SUMMARY_SENTINELS = (
     "BEGIN_UNTRUSTED_MARKET_SUMMARY",
     "END_UNTRUSTED_MARKET_SUMMARY",
 )
+_MARKET_REVIEW_LOCK_WAIT_INTERVAL_SECONDS = 0.2
+_MARKET_REVIEW_LOCK_WAIT_RETRIES = 8
 
 _RISK_PATTERNS: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
     ("high_risk", ("高风险", "风险偏高", "风险较高", "high risk", "elevated risk")),
@@ -379,15 +382,25 @@ class DailyMarketContextService:
         require_query_id_match: bool = False,
     ) -> Optional[DailyMarketContext]:
         lock_token = try_acquire_market_review_lock(config)
+        report_language = normalize_report_language(getattr(config, "report_language", "zh"))
+        cache_key = self._cache_key(
+            context_date=target_date,
+            region=region,
+            current_query_id=current_query_id,
+            require_query_id_match=require_query_id_match,
+            report_language=report_language,
+        )
+
         if lock_token is None:
             # Another process/thread is already refreshing market review context.
-            # Keep fail-open and avoid duplicate execution.
-            return self._load_same_day_history(
+            # Wait for the in-flight generation to persist context and retry reading history.
+            return self._wait_for_market_review_history_after_lock(
                 region=region,
                 target_date=target_date,
                 current_query_id=current_query_id,
                 require_query_id_match=require_query_id_match,
-                report_language=normalize_report_language(getattr(config, "report_language", "zh")),
+                report_language=report_language,
+                cache_key=cache_key,
             )
 
         try:
@@ -443,6 +456,46 @@ class DailyMarketContextService:
             return None
         finally:
             release_market_review_lock(lock_token)
+
+    def _wait_for_market_review_history_after_lock(
+        self,
+        *,
+        region: str,
+        target_date: date,
+        current_query_id: Optional[str],
+        require_query_id_match: bool,
+        report_language: str,
+        cache_key: Tuple[Any, ...],
+    ) -> Optional[DailyMarketContext]:
+        for attempt in range(_MARKET_REVIEW_LOCK_WAIT_RETRIES):
+            context = self._load_same_day_history(
+                region=region,
+                target_date=target_date,
+                current_query_id=current_query_id,
+                require_query_id_match=require_query_id_match,
+                report_language=report_language,
+            )
+            if context is not None:
+                self._cache[cache_key] = context
+                return context
+
+            if attempt + 1 >= _MARKET_REVIEW_LOCK_WAIT_RETRIES:
+                break
+
+            logger.info(
+                "市场复盘上下文锁竞争重试: attempt=%s, region=%s, target_date=%s",
+                attempt + 1,
+                region,
+                target_date.isoformat(),
+            )
+            time.sleep(_MARKET_REVIEW_LOCK_WAIT_INTERVAL_SECONDS)
+
+        logger.warning(
+            "市场复盘上下文锁竞争等待超限后仍未命中同日上下文，允许继续分析流程: region=%s, target_date=%s",
+            region,
+            target_date.isoformat(),
+        )
+        return None
 
     @staticmethod
     def _record_supports_region(payload: Any, record_region: Any, region: str) -> bool:
