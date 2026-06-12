@@ -602,6 +602,39 @@ def _market_review_report_text(review_result: Any) -> str:
     return review_result if isinstance(review_result, str) else ""
 
 
+def _save_reused_market_review_report(
+    notifier: Any,
+    market_report: str,
+    *,
+    config: Config,
+    trigger_source: str,
+    region: str,
+) -> None:
+    body = str(market_report or "").strip()
+    if not body:
+        return
+    title = (
+        "# 🎯 Market Review"
+        if str(getattr(config, "report_language", "zh")).strip().lower() == "en"
+        else "# 🎯 大盘复盘"
+    )
+    if not any(body.startswith(item) for item in ("# 🎯 大盘复盘", "# 🎯 Market Review")):
+        body = f"{title}\n\n{body}"
+    try:
+        date_str = datetime.now().strftime('%Y%m%d')
+        report_filename = f"market_review_{date_str}.md"
+        filepath = notifier.save_report_to_file(body, report_filename)
+        logger.info(
+            "[MarketReview] component=market_review action=save_reused_report "
+            "trigger_source=%s region=%s path=%s",
+            trigger_source,
+            region,
+            filepath,
+        )
+    except Exception as exc:
+        logger.warning("复用大盘上下文保存大盘复盘报告失败: %s", exc)
+
+
 def run_full_analysis(
     config: Config,
     args: argparse.Namespace,
@@ -769,6 +802,13 @@ def run_full_analysis(
                 market_report = market_context_full_report or market_context_summary
                 logger.info(
                     "复盘上下文可复用，跳过重复大盘复盘并复用上下文内容。"
+                )
+                _save_reused_market_review_report(
+                    pipeline.notifier,
+                    market_report,
+                    config=config,
+                    trigger_source=review_trigger_source,
+                    region=market_review_region,
                 )
                 if (
                     market_context_generated_during_stock

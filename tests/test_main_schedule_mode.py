@@ -1071,6 +1071,54 @@ class MainScheduleModeTestCase(unittest.TestCase):
         refresh.assert_called_once_with(config)
         pipeline.run.assert_called_once()
 
+    def test_run_full_analysis_saves_reused_runtime_market_context_without_notify(self) -> None:
+        args = self._make_args(no_notify=True)
+        target_date = date(2026, 3, 26)
+        config = self._make_config(
+            trading_day_check_enabled=False,
+            market_review_enabled=True,
+            daily_market_context_enabled=True,
+            single_stock_notify=False,
+            merge_email_notification=False,
+            analysis_delay=0,
+            database_path=str(Path(self.temp_dir.name) / "stock_analysis.db"),
+        )
+        pipeline = MagicMock()
+        pipeline.run.return_value = []
+        pipeline.notifier = MagicMock()
+        pipeline.notifier.save_report_to_file.return_value = "/tmp/market_review.md"
+
+        def build_pipeline(*args, **kwargs):
+            return pipeline
+
+        runtime_context = ("本轮运行时复盘摘要", "## 本轮运行时完整复盘")
+        with (
+            patch.object(main, "_refresh_stock_index_cache_for_analysis") as refresh,
+            patch("main._compute_trading_day_filter", return_value=([], "cn", False)),
+            patch("main._resolve_daily_market_context_target_date", return_value=target_date),
+            patch("src.core.pipeline.StockAnalysisPipeline", side_effect=build_pipeline),
+            patch(
+                "main._prime_daily_market_context",
+                side_effect=[("", ""), ("", ""), runtime_context],
+            ) as prime_context,
+            patch("main._run_market_review_with_shared_lock") as run_with_lock,
+            patch("src.core.market_review.run_market_review") as run_market_review,
+        ):
+            main.run_full_analysis(config, args, [])
+
+        run_with_lock.assert_not_called()
+        run_market_review.assert_not_called()
+        pipeline.notifier.send.assert_not_called()
+        pipeline.notifier.save_report_to_file.assert_called_once()
+        saved_content, saved_filename = pipeline.notifier.save_report_to_file.call_args.args
+        self.assertTrue(saved_content.startswith("# 🎯 大盘复盘\n\n"))
+        self.assertIn("## 本轮运行时完整复盘", saved_content)
+        self.assertTrue(saved_filename.startswith("market_review_"))
+        self.assertTrue(saved_filename.endswith(".md"))
+        self.assertEqual(prime_context.call_count, 3)
+        refresh.assert_called_once_with(config)
+        pipeline.run.assert_called_once()
+
     def test_run_full_analysis_still_runs_market_review_for_merge_disabled_with_reused_context(self) -> None:
         args = self._make_args()
         target_date = date(2026, 3, 26)
