@@ -2170,24 +2170,23 @@ class SearchService:
     _OFFICIAL_SOURCE_LABELS = (
         "cninfo", "hkexnews", "上交所", "深交所", "港交所", "证券交易所",
     )
-    _LOW_QUALITY_PAGE_TERMS = (
-        "下载", "安装", "安卓版", "苹果版", "官方版", "最新版",
-        "安装包", "资源包", "应用商店", "游戏", "手游", "app", "apk",
-        "download", "install", "installer", "software", "game", "mobile app",
+    _LOW_QUALITY_DOWNLOAD_ACTION_TERMS = (
+        "下载", "安装", "下载安装", "下载安装到手机", "下载链接",
+        "免费下载", "客户端下载", "应用下载", "官方app下载",
+        "安装包", "apk", "download", "install", "installer",
     )
     _LOW_QUALITY_DOWNLOAD_INTENT_TERMS = (
-        "安装包", "安卓版", "苹果版", "官方版", "客户端下载", "应用下载",
-        "下载安装", "下载安装到手机", "下载链接", "免费下载", "旧版下载",
-        "极速版下载", "官方app下载",
-    )
-    _LOW_QUALITY_DOWNLOAD_CONTEXT_TERMS = (
-        "下载", "安装", "安卓版", "苹果版", "官方版", "最新版",
-        "安装包", "资源包", "应用商店", "apk", "download", "install",
-        "installer", "software", "mobile app",
+        "安装包", "客户端下载", "应用下载", "下载安装", "下载安装到手机",
+        "下载链接", "免费下载", "旧版下载", "极速版下载", "官方app下载",
     )
     _LOW_QUALITY_APP_CONTEXT_TERMS = (
         "好评", "评分", "版本", "大小", "适用年龄", "开发者", "应用",
         "ratings", "reviews", "stars", "version", "developer", "package",
+    )
+    _LOW_QUALITY_APP_METADATA_TERMS = (
+        "版本", "大小", "适用年龄", "开发者", "应用", "应用商店",
+        "安卓版", "苹果版", "官方版", "最新版", "version", "developer",
+        "package", "mobile app",
     )
     _LOW_QUALITY_FILE_SIZE_RE = re.compile(r"\b\d+(?:\.\d+)?\s*(?:kb|mb|gb)\b", re.IGNORECASE)
     _LOW_QUALITY_RATING_RE = re.compile(
@@ -2203,9 +2202,12 @@ class SearchService:
     )
     _ADULT_SERVICE_SPAM_STRONG_TERMS = (
         "上门特殊服务", "同城约", "约炮", "援交", "楼凤", "外围女",
-        "外围服务", "包夜", "大保健", "莞式", "推油", "全套服务",
+        "外围服务", "包夜", "大保健", "莞式", "推油",
         "成人服务", "色情", "adult service", "escort service",
         "sex service", "call girl",
+    )
+    _ADULT_SERVICE_SPAM_AMBIGUOUS_TERMS = (
+        "全套服务",
     )
     _ADULT_SERVICE_SPAM_CONTEXT_TERMS = (
         "小姐", "上门", "预约", "同城", "按摩", "保健", "足浴", "桑拿",
@@ -2748,17 +2750,17 @@ class SearchService:
             " ".join(filter(None, [parsed_url.netloc, parsed_url.path, parsed_url.query]))
         ).lower()
 
-        has_download_term = cls._contains_any_low_quality_news_term(
-            content_text,
-            cls._LOW_QUALITY_PAGE_TERMS,
-        )
-        has_download_context = cls._contains_any_low_quality_news_term(
-            content_text,
-            cls._LOW_QUALITY_DOWNLOAD_CONTEXT_TERMS,
-        )
         has_app_context = cls._contains_any_low_quality_news_term(
             content_text,
             cls._LOW_QUALITY_APP_CONTEXT_TERMS,
+        )
+        has_app_metadata = cls._contains_any_low_quality_news_term(
+            content_text,
+            cls._LOW_QUALITY_APP_METADATA_TERMS,
+        )
+        has_download_action = cls._contains_any_low_quality_news_term(
+            content_text,
+            cls._LOW_QUALITY_DOWNLOAD_ACTION_TERMS,
         )
         has_download_intent = cls._contains_any_low_quality_news_term(
             content_text,
@@ -2769,16 +2771,21 @@ class SearchService:
         has_url_signal = bool(cls._LOW_QUALITY_URL_RE.search(url_surface))
         has_app_listing_context = (
             has_app_context
-            and (has_download_term or has_download_context)
+            and has_app_metadata
+            and (has_download_action or has_download_intent)
             and (has_file_size or has_rating)
         )
         has_content_download_page = (
             has_download_intent
-            and (has_download_term or has_download_context or has_app_context)
+            or (has_download_action and (has_app_metadata or has_file_size))
         )
         has_url_backed_download_page = (
             has_url_signal
-            and (has_download_context or has_file_size or has_rating or has_download_intent)
+            and (
+                has_file_size
+                or has_download_intent
+                or (has_download_action and has_app_metadata)
+            )
         )
 
         return (
@@ -2820,6 +2827,13 @@ class SearchService:
             combined_text,
             ("小姐", "按摩", "足浴", "桑拿", "会所", "技师"),
         )
+        has_ambiguous_adult_phrase = cls._contains_any_news_term(
+            combined_text,
+            cls._ADULT_SERVICE_SPAM_AMBIGUOUS_TERMS,
+        )
+        if has_ambiguous_adult_phrase:
+            return has_service_anchor
+
         return has_service_anchor and context_hits >= 3
 
     @classmethod

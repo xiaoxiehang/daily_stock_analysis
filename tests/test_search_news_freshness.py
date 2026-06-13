@@ -658,6 +658,63 @@ class SearchNewsFreshnessTestCase(unittest.TestCase):
         )
         self.assertEqual(resp.results[0].relevance_category, "direct_company_news")
 
+    def test_app_ticker_rating_phrase_does_not_trigger_app_download_filter(self) -> None:
+        """Ticker APP and analyst ratings should not look like an app listing."""
+        fresh = datetime.now().date().isoformat()
+        service, _ = self._create_service_with_mock_provider(
+            news_max_age_days=3,
+            news_strategy_profile="short",
+            response=_response(
+                [
+                    _result(
+                        "APP stock jumps after advertising platform guidance",
+                        fresh,
+                        snippet=(
+                            "APP shares rose after analysts gave the company "
+                            "5 stars for revenue momentum."
+                        ),
+                        url="https://finance.example.invalid/app-stock-rating",
+                        source="finance.example.invalid",
+                    )
+                ]
+            ),
+        )
+
+        resp = service.search_stock_news("APP", "AppLovin", max_results=1)
+
+        self.assertEqual(
+            [item.title for item in resp.results],
+            ["APP stock jumps after advertising platform guidance"],
+        )
+        self.assertEqual(resp.results[0].relevance_category, "direct_company_news")
+
+    def test_product_game_rating_does_not_trigger_app_download_filter(self) -> None:
+        """Normal game/product ratings need download/install evidence before filtering."""
+        fresh = datetime.now().date().isoformat()
+        service, _ = self._create_service_with_mock_provider(
+            news_max_age_days=3,
+            news_strategy_profile="short",
+            response=_response(
+                [
+                    _result(
+                        "腾讯控股 00700 新游上线获玩家评分 9.0",
+                        fresh,
+                        snippet="腾讯游戏新品上线首周表现强劲，玩家评分 9.0。",
+                        url="https://finance.example.invalid/app/news/00700-game-rating",
+                        source="finance.example.invalid",
+                    )
+                ]
+            ),
+        )
+
+        resp = service.search_stock_news("00700.HK", "腾讯控股", max_results=1)
+
+        self.assertEqual(
+            [item.title for item in resp.results],
+            ["腾讯控股 00700 新游上线获玩家评分 9.0"],
+        )
+        self.assertEqual(resp.results[0].relevance_category, "direct_company_news")
+
     def test_finance_client_boilerplate_does_not_trigger_download_filter(self) -> None:
         """Finance media boilerplate such as 客户端讯 should not look like an app page."""
         fresh = datetime.now().date().isoformat()
@@ -706,6 +763,33 @@ class SearchNewsFreshnessTestCase(unittest.TestCase):
         self.assertEqual(
             [item.title for item in resp.results],
             ["腾讯控股 00700 受外围市场走弱拖累"],
+        )
+        self.assertEqual(resp.results[0].relevance_category, "direct_company_news")
+
+    def test_business_full_service_phrase_does_not_trigger_adult_spam_filter(self) -> None:
+        """Business-safe 全套服务 wording should require adult-service context."""
+        fresh = datetime.now().date().isoformat()
+        service, _ = self._create_service_with_mock_provider(
+            news_max_age_days=3,
+            news_strategy_profile="short",
+            response=_response(
+                [
+                    _result(
+                        "华能国际 600011 推出全套服务解决方案",
+                        fresh,
+                        snippet="公司面向能源客户提供全套服务解决方案，提升运维效率。",
+                        url="https://finance.example.invalid/news/600011-service-solution",
+                        source="finance.example.invalid",
+                    )
+                ]
+            ),
+        )
+
+        resp = service.search_stock_news("600011", "华能国际", max_results=1)
+
+        self.assertEqual(
+            [item.title for item in resp.results],
+            ["华能国际 600011 推出全套服务解决方案"],
         )
         self.assertEqual(resp.results[0].relevance_category, "direct_company_news")
 
