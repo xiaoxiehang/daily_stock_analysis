@@ -43,6 +43,7 @@ NEWSNOW_BASE_URL=https://newsnow.busiyi.world
 
 - `curl -sS "${NEWSNOW_BASE_URL}/api/s?id=cls-hot" | python -c "import sys, json; data=json.load(sys.stdin); assert isinstance(data, dict); assert isinstance(data.get('items'), list); print('ok')"`
 - 若要手工核验 `status`、`id`、`items[].title`、`items[].url`/`mobileUrl`、`items[].pubDate`/`items[].extra.date` 这类字段，可与测试回归组合使用：`test_newsnow_source_fetches_json_items`。
+- 公共示例实例不做自动化上线级联通保障；若你依赖该实例，请在实际部署环境先做一次完整 GET 返回形态回归（示例代码见上），生产建议改用已确认的自有/可控实例。
 
 ## API
 
@@ -89,7 +90,7 @@ GET {NEWSNOW_BASE_URL}/api/s?id=cls-hot
 
 ## 兼容性与回滚说明（Issue #1707）
 
-- 本功能不改动第三方模型/API Provider 语义，不新增 provider/model/base URL/默认模型策略/运行时路由或配置迁移分支。
+- 本功能不改动第三方 LLM provider 语义，不新增 provider/model/base URL/默认模型策略/运行时路由或配置迁移分支。
 - 结构化检测提示中的模型/API 兼容风险在本次改动中不成立：`news_context` 注入链路仅复用现有 LLM 分析输入构造流程（`src/core/pipeline.py`、`src/market_analyzer.py`、`src/analyzer.py`），且不新增 `.env` 写入、保存前清理、清空/回填逻辑。
 - 回滚方式：`revert` 本 PR；如需降级配置，仅需停用并移除本地资讯源配置（含 `sources` 表与 `intelligence_items` 存量）即可，不影响原有模型、provider 或其它历史分析链路。
 

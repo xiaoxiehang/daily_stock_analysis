@@ -164,6 +164,26 @@ class IntelligenceServiceTestCase(unittest.TestCase):
         self.assertIsNotNone(saved_source)
         self.assertEqual(saved_source.last_error, "fetch failed: upstream request failed")
 
+    def test_fetch_newsnow_http_error_does_not_expose_source_query_secret(self) -> None:
+        secret_url = "https://newsnow.example.com/api/s?id=cls-hot&token=super-secret"
+        source = self.service.create_source({
+            "name": "newsnow-secret-feed",
+            "url": secret_url,
+            "source_type": "newsnow",
+            "scope_type": "market",
+            "market": "cn",
+        })
+
+        with patch("src.services.intelligence_service.requests.get", return_value=self._mock_http_error_response(secret_url)):
+            with self.assertRaises(IntelligenceServiceError) as ctx:
+                self.service.fetch_source(source["id"])
+
+        message = str(ctx.exception)
+        self.assertEqual(message, "fetch failed: upstream request failed")
+        self.assertNotIn(secret_url, message)
+        self.assertNotIn("token=", message)
+        self.assertNotIn("super-secret", message)
+
     def test_private_network_url_is_rejected(self) -> None:
         with self.assertRaises(IntelligenceServiceError):
             self.service.create_source({"name": "bad", "url": "http://127.0.0.1:8000/rss.xml", "scope_type": "market"})

@@ -430,7 +430,7 @@ class IntelligenceService:
         except IntelligenceServiceError:
             raise
         except Exception as exc:
-            raise IntelligenceServiceError(f"fetch failed: {exc}") from exc
+            raise IntelligenceServiceError(_UPSTREAM_FETCH_FAILURE_MESSAGE) from exc
         finally:
             if response is not None:
                 response.close()

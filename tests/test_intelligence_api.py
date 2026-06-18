@@ -185,6 +185,39 @@ class IntelligenceApiTestCase(unittest.TestCase):
                     self.assertNotIn("token=", body["message"])
                     self.assertNotIn("super-secret", body["message"])
 
+    def test_upstream_fetch_errors_for_newsnow_do_not_expose_query_secret(self) -> None:
+        secret_url = "https://newsnow.example.com/api/s?id=cls-hot&token=super-secret"
+        payload = {
+            "name": "newsnow-secret-feed",
+            "url": secret_url,
+            "source_type": "newsnow",
+            "scope_type": "market",
+            "market": "cn",
+        }
+
+        create_resp = self.client.post("/api/v1/intelligence/sources", json=payload)
+        self.assertEqual(create_resp.status_code, 200)
+        source_id = create_resp.json()["id"]
+
+        requests_to_check = [
+            ("test", lambda: self.client.post("/api/v1/intelligence/sources/test", json=payload)),
+            ("fetch", lambda: self.client.post(f"/api/v1/intelligence/sources/{source_id}/fetch")),
+        ]
+        with patch(
+            "src.services.intelligence_service.requests.get",
+            side_effect=lambda url, **_kwargs: self._mock_http_error_response(url),
+        ):
+            for endpoint, send_request in requests_to_check:
+                with self.subTest(endpoint=endpoint):
+                    response = send_request()
+                    self.assertEqual(response.status_code, 400)
+                    body = response.json()
+                    self.assertEqual(body["error"], "validation_error")
+                    self.assertEqual(body["message"], "fetch failed: upstream request failed")
+                    self.assertNotIn(secret_url, body["message"])
+                    self.assertNotIn("token=", body["message"])
+                    self.assertNotIn("super-secret", body["message"])
+
 
 if __name__ == "__main__":
     unittest.main()

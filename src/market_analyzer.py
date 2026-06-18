@@ -1477,7 +1477,7 @@ Market conditions can change quickly. The data above is for reference only and d
         )
 
     def _merge_persisted_market_intelligence(self, news: List) -> List:
-        """Merge local persisted market intelligence before search news to avoid truncation-loss, fail-open."""
+        """Merge local persisted market intelligence and search news with bounded prompt/payload slot preservation."""
         search_news = list(news or [])
         merged_local = []
         seen_urls = {
@@ -1510,9 +1510,17 @@ Market conditions can change quickly. The data above is for reference only and d
                 })
         except Exception as exc:
             logger.debug("[大盘] %s action=load_local_intelligence status=failed error=%s", self._log_context(), exc)
-        # Keep local market intelligence at the front so market-review prompt/payload slicing
-        # still includes local links when search news already reaches the top-N limit.
-        return merged_local + search_news
+        merged_news = []
+        merged_local_index = 0
+        merged_search_index = 0
+        while merged_local_index < len(merged_local) or merged_search_index < len(search_news):
+            if merged_local_index < len(merged_local):
+                merged_news.append(merged_local[merged_local_index])
+                merged_local_index += 1
+            if merged_search_index < len(search_news):
+                merged_news.append(search_news[merged_search_index])
+                merged_search_index += 1
+        return merged_news
 
     def run_daily_review(self) -> str:
         """

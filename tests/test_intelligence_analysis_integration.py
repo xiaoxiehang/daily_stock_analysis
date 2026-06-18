@@ -209,6 +209,71 @@ class PersistedIntelligenceAnalysisIntegrationTestCase(unittest.TestCase):
         self.assertEqual(payload["news"][0]["url"], "https://news.example.com/market")
         self.assertGreaterEqual(len(payload["news"]), 1)
 
+    def test_market_review_keeps_search_news_when_local_pool_is_full(self) -> None:
+        repo = IntelligenceRepository()
+        now = datetime.now()
+        for index in range(5):
+            repo.upsert_items([
+                {
+                    "source_name": f"market-local-{index}",
+                    "source_type": "rss",
+                    "title": f"Market local headline {index}",
+                    "summary": f"Local market signal {index}",
+                    "url": f"https://news.example.com/market-local/{index}",
+                    "source": f"market-local-{index}",
+                    "published_at": now + timedelta(minutes=index + 1),
+                    "fetched_at": now + timedelta(minutes=index + 1),
+                    "scope_type": "market",
+                    "scope_value": None,
+                    "market": "cn",
+                }
+            ])
+
+        analyzer = MarketAnalyzer(config=self.config, region="cn")
+        search_news = [
+            {
+                "title": f"Search headline {i}",
+                "snippet": f"Search summary {i}",
+                "source": "search-source",
+                "published_date": "2026-06-17",
+                "url": f"https://news.example.com/search/{i}",
+            }
+            for i in range(8)
+        ]
+
+        merged = analyzer._merge_persisted_market_intelligence(search_news)
+        first_six = merged[:6]
+        local_count = len([item for item in first_six if str(item.get("title", "")).startswith("Market local headline")])
+        search_count = len([item for item in first_six if str(item.get("title", "")).startswith("Search headline")])
+        self.assertEqual(local_count, 3)
+        self.assertEqual(search_count, 3)
+
+        prompt = analyzer._build_review_prompt(
+            MarketOverview(date="2026-06-17"),
+            merged,
+        )
+        self.assertIn("Search headline 0", prompt)
+
+        payload = analyzer.build_market_review_payload(
+            MarketOverview(
+                date="2026-06-17",
+                indices=[
+                    MarketIndex(
+                        code="000001",
+                        name="SSE Composite",
+                        current=3200.0,
+                        change=10.0,
+                        change_pct=0.25,
+                    )
+                ],
+            ),
+            news=merged,
+            report="复盘正文",
+            market_light_snapshot={"dimensions": {"breadth": {"available": True}}},
+        )
+        self.assertGreaterEqual(len(payload["news"]), 8)
+        self.assertEqual(sum(item["title"].startswith("Search headline") for item in payload["news"][0:8]), 4)
+
     def test_analysis_evidence_excludes_missing_or_stale_publish_time(self) -> None:
         self.config.news_max_age_days = 30
         self.config.news_strategy_profile = "short"
