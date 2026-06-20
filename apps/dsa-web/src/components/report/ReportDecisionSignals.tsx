@@ -21,6 +21,36 @@ interface ReportDecisionSignalsProps {
   reportType?: ReportType;
 }
 
+type DetailSidecarState = {
+  signalId: number | null;
+  outcomes: {
+    items: DecisionSignalOutcomeItem[];
+    loading: boolean;
+    error: ParsedApiError | null;
+  };
+  feedback: {
+    item: DecisionSignalFeedbackItem | null;
+    loading: boolean;
+    error: ParsedApiError | null;
+  };
+};
+
+function createDetailSidecarState(signalId: number | null = null, loading = false): DetailSidecarState {
+  return {
+    signalId,
+    outcomes: {
+      items: [],
+      loading,
+      error: null,
+    },
+    feedback: {
+      item: null,
+      loading,
+      error: null,
+    },
+  };
+}
+
 export const ReportDecisionSignals: React.FC<ReportDecisionSignalsProps> = ({
   recordId,
   reportType,
@@ -30,12 +60,7 @@ export const ReportDecisionSignals: React.FC<ReportDecisionSignalsProps> = ({
   const [selected, setSelected] = useState<DecisionSignalItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ParsedApiError | null>(null);
-  const [selectedOutcomes, setSelectedOutcomes] = useState<DecisionSignalOutcomeItem[]>([]);
-  const [selectedOutcomesLoading, setSelectedOutcomesLoading] = useState(false);
-  const [selectedOutcomesError, setSelectedOutcomesError] = useState<ParsedApiError | null>(null);
-  const [selectedFeedback, setSelectedFeedback] = useState<DecisionSignalFeedbackItem | null>(null);
-  const [selectedFeedbackLoading, setSelectedFeedbackLoading] = useState(false);
-  const [selectedFeedbackError, setSelectedFeedbackError] = useState<ParsedApiError | null>(null);
+  const [detailSidecar, setDetailSidecar] = useState<DetailSidecarState>(() => createDetailSidecarState());
   const requestIdRef = useRef(0);
   const detailRequestIdRef = useRef(0);
   const shouldRender = Boolean(recordId) && reportType !== 'market_review';
@@ -47,12 +72,8 @@ export const ReportDecisionSignals: React.FC<ReportDecisionSignalsProps> = ({
     setLoading(true);
     setItems([]);
     setSelected(null);
-    setSelectedOutcomes([]);
-    setSelectedOutcomesLoading(false);
-    setSelectedOutcomesError(null);
-    setSelectedFeedback(null);
-    setSelectedFeedbackLoading(false);
-    setSelectedFeedbackError(null);
+    detailRequestIdRef.current += 1;
+    setDetailSidecar(createDetailSidecarState());
     setError(null);
     try {
       const response = await decisionSignalsApi.list({
@@ -81,12 +102,8 @@ export const ReportDecisionSignals: React.FC<ReportDecisionSignalsProps> = ({
       setLoading(false);
       setItems([]);
       setSelected(null);
-      setSelectedOutcomes([]);
-      setSelectedOutcomesLoading(false);
-      setSelectedOutcomesError(null);
-      setSelectedFeedback(null);
-      setSelectedFeedbackLoading(false);
-      setSelectedFeedbackError(null);
+      detailRequestIdRef.current += 1;
+      setDetailSidecar(createDetailSidecarState());
       setError(null);
       return;
     }
@@ -99,58 +116,105 @@ export const ReportDecisionSignals: React.FC<ReportDecisionSignalsProps> = ({
   useEffect(() => {
     if (!selected) {
       detailRequestIdRef.current += 1;
-      setSelectedOutcomes([]);
-      setSelectedOutcomesLoading(false);
-      setSelectedOutcomesError(null);
-      setSelectedFeedback(null);
-      setSelectedFeedbackLoading(false);
-      setSelectedFeedbackError(null);
+      setDetailSidecar(createDetailSidecarState());
       return;
     }
 
+    const signalId = selected.id;
     const requestId = detailRequestIdRef.current + 1;
     detailRequestIdRef.current = requestId;
-    setSelectedOutcomesLoading(true);
-    setSelectedFeedbackLoading(true);
-    setSelectedOutcomesError(null);
-    setSelectedFeedbackError(null);
+    setDetailSidecar(createDetailSidecarState(signalId, true));
 
-    void decisionSignalsApi.getSignalOutcomes(selected.id)
+    void decisionSignalsApi.getSignalOutcomes(signalId)
       .then((response) => {
         if (detailRequestIdRef.current !== requestId) return;
-        setSelectedOutcomes(response.items);
+        setDetailSidecar((current) => (
+          current.signalId === signalId
+            ? {
+              ...current,
+              outcomes: {
+                items: response.items,
+                loading: false,
+                error: null,
+              },
+            }
+            : current
+        ));
       })
       .catch((err) => {
         if (detailRequestIdRef.current !== requestId) return;
-        setSelectedOutcomes([]);
-        setSelectedOutcomesError(getParsedApiError(err));
-      })
-      .finally(() => {
-        if (detailRequestIdRef.current === requestId) {
-          setSelectedOutcomesLoading(false);
-        }
+        const parsed = getParsedApiError(err);
+        setDetailSidecar((current) => (
+          current.signalId === signalId
+            ? {
+              ...current,
+              outcomes: {
+                items: [],
+                loading: false,
+                error: parsed,
+              },
+            }
+            : current
+        ));
       });
 
-    void decisionSignalsApi.getFeedback(selected.id)
+    void decisionSignalsApi.getFeedback(signalId)
       .then((response) => {
         if (detailRequestIdRef.current !== requestId) return;
-        setSelectedFeedback(response);
+        setDetailSidecar((current) => (
+          current.signalId === signalId
+            ? {
+              ...current,
+              feedback: {
+                item: response,
+                loading: false,
+                error: null,
+              },
+            }
+            : current
+        ));
       })
       .catch((err) => {
         if (detailRequestIdRef.current !== requestId) return;
-        setSelectedFeedback(null);
-        setSelectedFeedbackError(getParsedApiError(err));
-      })
-      .finally(() => {
-        if (detailRequestIdRef.current === requestId) {
-          setSelectedFeedbackLoading(false);
-        }
+        const parsed = getParsedApiError(err);
+        setDetailSidecar((current) => (
+          current.signalId === signalId
+            ? {
+              ...current,
+              feedback: {
+                item: null,
+                loading: false,
+                error: parsed,
+              },
+            }
+            : current
+        ));
       });
   }, [selected]);
+
+  const handleSelectSignal = useCallback((item: DecisionSignalItem) => {
+    detailRequestIdRef.current += 1;
+    setSelected(item);
+    setDetailSidecar(createDetailSidecarState(item.id, true));
+  }, []);
+
+  const handleCloseDetails = useCallback(() => {
+    detailRequestIdRef.current += 1;
+    setSelected(null);
+    setDetailSidecar(createDetailSidecarState());
+  }, []);
 
   if (!shouldRender) {
     return null;
   }
+
+  const sidecarMatches = selected !== null && detailSidecar.signalId === selected.id;
+  const detailOutcomes = sidecarMatches
+    ? detailSidecar.outcomes
+    : { items: [], loading: Boolean(selected), error: null };
+  const detailFeedback = sidecarMatches
+    ? detailSidecar.feedback
+    : { item: null, loading: Boolean(selected), error: null };
 
   return (
     <>
@@ -186,7 +250,7 @@ export const ReportDecisionSignals: React.FC<ReportDecisionSignalsProps> = ({
               <DecisionSignalCard
                 key={item.id}
                 item={item}
-                onSelect={(selectedItem) => setSelected(selectedItem)}
+                onSelect={handleSelectSignal}
                 selected={selected?.id === item.id}
               />
             ))}
@@ -196,19 +260,19 @@ export const ReportDecisionSignals: React.FC<ReportDecisionSignalsProps> = ({
 
       <Drawer
         isOpen={Boolean(selected)}
-        onClose={() => setSelected(null)}
+        onClose={handleCloseDetails}
         title={t('decisionSignals.detailTitle')}
         width="max-w-3xl"
       >
         {selected ? (
           <DecisionSignalDetails
             item={selected}
-            outcomes={selectedOutcomes}
-            outcomesLoading={selectedOutcomesLoading}
-            outcomesError={selectedOutcomesError?.message ?? null}
-            feedback={selectedFeedback}
-            feedbackLoading={selectedFeedbackLoading}
-            feedbackError={selectedFeedbackError?.message ?? null}
+            outcomes={detailOutcomes.items}
+            outcomesLoading={detailOutcomes.loading}
+            outcomesError={detailOutcomes.error?.message ?? null}
+            feedback={detailFeedback.item}
+            feedbackLoading={detailFeedback.loading}
+            feedbackError={detailFeedback.error?.message ?? null}
           />
         ) : null}
       </Drawer>

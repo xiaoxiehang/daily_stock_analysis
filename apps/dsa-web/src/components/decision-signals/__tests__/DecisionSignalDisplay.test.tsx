@@ -73,6 +73,39 @@ describe('DecisionSignalCard', () => {
     expect(screen.getByText('贵州茅台')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '查看 贵州茅台 AI 建议详情' })).not.toBeInTheDocument();
   });
+
+  it('hides missing optional plan text for sparse legacy signals', () => {
+    window.localStorage.setItem('dsa.uiLanguage', 'zh');
+    render(
+      <UiLanguageProvider>
+        <DecisionSignalCard
+          item={{
+            ...signal,
+            score: null,
+            confidence: null,
+            horizon: null,
+            entryLow: null,
+            entryHigh: null,
+            stopLoss: null,
+            targetPrice: null,
+            invalidation: null,
+            watchConditions: null,
+            catalystSummary: null,
+          }}
+        />
+      </UiLanguageProvider>,
+    );
+
+    expect(screen.getByText('评分')).toBeInTheDocument();
+    expect(screen.getByText('置信度')).toBeInTheDocument();
+    expect(screen.getByText('周期')).toBeInTheDocument();
+    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(3);
+    expect(screen.queryByText('入场区间')).not.toBeInTheDocument();
+    expect(screen.queryByText('止损')).not.toBeInTheDocument();
+    expect(screen.queryByText('目标价')).not.toBeInTheDocument();
+    expect(screen.queryByText('催化')).not.toBeInTheDocument();
+    expect(screen.queryByText('失效条件')).not.toBeInTheDocument();
+  });
 });
 
 describe('DecisionSignalDetails', () => {

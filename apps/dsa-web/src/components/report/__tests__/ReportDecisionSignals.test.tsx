@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { decisionSignalsApi } from '../../../api/decisionSignals';
@@ -51,6 +51,16 @@ const signal: DecisionSignalItem = {
   metadata: undefined,
 };
 
+const nextSignal: DecisionSignalItem = {
+  ...signal,
+  id: 22,
+  stockCode: 'AAPL',
+  stockName: 'Apple',
+  market: 'us',
+  reason: '第二条信号理由',
+  riskSummary: '等待财报确认',
+};
+
 const outcome: DecisionSignalOutcomeItem = {
   id: 120,
   signalId: 21,
@@ -63,12 +73,27 @@ const outcome: DecisionSignalOutcomeItem = {
   holdingState: 'holding',
 };
 
+const nextOutcome: DecisionSignalOutcomeItem = {
+  ...outcome,
+  id: 121,
+  signalId: 22,
+  outcome: 'neutral',
+};
+
 const feedback: DecisionSignalFeedbackItem = {
   signalId: 21,
   feedbackValue: 'useful',
   reasonCode: null,
   note: null,
   source: 'web',
+};
+
+const emptyFeedback: DecisionSignalFeedbackItem = {
+  signalId: 21,
+  feedbackValue: null,
+  reasonCode: null,
+  note: null,
+  source: null,
 };
 
 function renderComponent(props: React.ComponentProps<typeof ReportDecisionSignals>) {
@@ -130,6 +155,120 @@ describe('ReportDecisionSignals', () => {
       page: 1,
       pageSize: 20,
     });
+  });
+
+  it('does not show a previous signal sidecar while the next signal details are loading', async () => {
+    const nextOutcomes = deferredPromise<{
+      items: DecisionSignalOutcomeItem[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>();
+    const nextFeedback = deferredPromise<DecisionSignalFeedbackItem>();
+    vi.mocked(decisionSignalsApi.list).mockResolvedValueOnce({
+      items: [signal, nextSignal],
+      total: 2,
+      page: 1,
+      pageSize: 20,
+    });
+    vi.mocked(decisionSignalsApi.getSignalOutcomes).mockImplementation((signalId: number) => {
+      if (signalId === 21) {
+        return Promise.resolve({
+          items: [outcome],
+          total: 1,
+          page: 1,
+          pageSize: 20,
+        });
+      }
+      return nextOutcomes.promise;
+    });
+    vi.mocked(decisionSignalsApi.getFeedback).mockImplementation((signalId: number) => {
+      if (signalId === 21) return Promise.resolve(feedback);
+      return nextFeedback.promise;
+    });
+
+    renderComponent({ recordId: 5, reportType: 'detailed' });
+
+    fireEvent.click(await screen.findByRole('button', { name: '查看 腾讯控股 AI 建议详情' }));
+    let dialog = await screen.findByRole('dialog');
+    expect(await within(dialog).findByText('命中')).toBeInTheDocument();
+    expect(within(dialog).getByText('有用')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '查看 Apple AI 建议详情' }));
+    dialog = await screen.findByRole('dialog');
+
+    expect(within(dialog).getByText('第二条信号理由')).toBeInTheDocument();
+    expect(within(dialog).queryByText('命中')).not.toBeInTheDocument();
+    expect(within(dialog).queryByText('有用')).not.toBeInTheDocument();
+    expect(within(dialog).getAllByText(/正在加载/).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('ignores stale sidecar responses after selecting another report signal', async () => {
+    const firstOutcomes = deferredPromise<{
+      items: DecisionSignalOutcomeItem[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>();
+    const firstFeedback = deferredPromise<DecisionSignalFeedbackItem>();
+    vi.mocked(decisionSignalsApi.list).mockResolvedValueOnce({
+      items: [signal, nextSignal],
+      total: 2,
+      page: 1,
+      pageSize: 20,
+    });
+    vi.mocked(decisionSignalsApi.getSignalOutcomes).mockImplementation((signalId: number) => {
+      if (signalId === 21) return firstOutcomes.promise;
+      return Promise.resolve({
+        items: [nextOutcome],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+      });
+    });
+    vi.mocked(decisionSignalsApi.getFeedback).mockImplementation((signalId: number) => {
+      if (signalId === 21) return firstFeedback.promise;
+      return Promise.resolve({
+        ...emptyFeedback,
+        signalId: 22,
+      });
+    });
+
+    renderComponent({ recordId: 5, reportType: 'detailed' });
+
+    fireEvent.click(await screen.findByRole('button', { name: '查看 腾讯控股 AI 建议详情' }));
+    fireEvent.click(screen.getByRole('button', { name: '查看 Apple AI 建议详情' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(await within(dialog).findByText('第二条信号理由')).toBeInTheDocument();
+    expect(await within(dialog).findByText('中性')).toBeInTheDocument();
+
+    await act(async () => {
+      firstOutcomes.resolve({
+        items: [outcome],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+      });
+      firstFeedback.resolve(feedback);
+      await Promise.all([firstOutcomes.promise, firstFeedback.promise]);
+    });
+
+    expect(within(dialog).queryByText('命中')).not.toBeInTheDocument();
+    expect(within(dialog).queryByText('有用')).not.toBeInTheDocument();
+    expect(within(dialog).getByText('暂无反馈')).toBeInTheDocument();
+  });
+
+  it('shows independent sidecar error and empty feedback states', async () => {
+    vi.mocked(decisionSignalsApi.getSignalOutcomes).mockRejectedValueOnce(new Error('outcomes down'));
+    vi.mocked(decisionSignalsApi.getFeedback).mockResolvedValueOnce(emptyFeedback);
+
+    renderComponent({ recordId: 5, reportType: 'detailed' });
+
+    fireEvent.click(await screen.findByRole('button', { name: '查看 腾讯控股 AI 建议详情' }));
+    const dialog = await screen.findByRole('dialog');
+
+    expect(await within(dialog).findByText('outcomes down')).toBeInTheDocument();
+    expect(within(dialog).getByText('暂无反馈')).toBeInTheDocument();
   });
 
   it('shows an empty state when the report has no extracted signals', async () => {
