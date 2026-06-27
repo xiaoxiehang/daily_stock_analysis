@@ -41,7 +41,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/dsa-web/dist
+          path: static
           
       - name: Deploy to GitHub Pages
         id: deployment
