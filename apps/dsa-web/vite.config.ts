@@ -92,7 +92,7 @@ const getVendorChunkName = (id: string): string | undefined => {
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/daily_stock_analysis/',
+  base: '/api/dsa/',
   define: {
     __APP_PACKAGE_VERSION__: JSON.stringify(packageJson.version ?? '0.0.0'),
     __APP_BUILD_TIME__: JSON.stringify(buildTime),
