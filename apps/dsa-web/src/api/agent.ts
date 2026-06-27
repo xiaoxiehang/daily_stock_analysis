@@ -51,32 +51,32 @@ export interface ChatSessionMessage {
 
 export const agentApi = {
   async chat(payload: ChatRequest): Promise<ChatResponse> {
-    const response = await apiClient.post<ChatResponse>('/api/v1/agent/chat', payload, {
+    const response = await apiClient.post<ChatResponse>('/v1/agent/chat', payload, {
       timeout: 120000,
     });
     return response.data;
   },
   async getSkills(): Promise<SkillsResponse> {
-    const response = await apiClient.get<SkillsResponse>('/api/v1/agent/skills');
+    const response = await apiClient.get<SkillsResponse>('/v1/agent/skills');
     return response.data;
   },
   async getChatSessions(limit = 50): Promise<ChatSessionItem[]> {
-    const response = await apiClient.get<{ sessions: ChatSessionItem[] }>('/api/v1/agent/chat/sessions', { params: { limit } });
+    const response = await apiClient.get<{ sessions: ChatSessionItem[] }>('/v1/agent/chat/sessions', { params: { limit } });
     return response.data.sessions;
   },
   async getChatSessionMessages(sessionId: string): Promise<ChatSessionMessage[]> {
-    const response = await apiClient.get<{ messages: ChatSessionMessage[] }>(`/api/v1/agent/chat/sessions/${sessionId}`);
+    const response = await apiClient.get<{ messages: ChatSessionMessage[] }>(`/v1/agent/chat/sessions/${sessionId}`);
     return response.data.messages;
   },
   async deleteChatSession(sessionId: string): Promise<void> {
-    await apiClient.delete(`/api/v1/agent/chat/sessions/${sessionId}`);
+    await apiClient.delete(`/v1/agent/chat/sessions/${sessionId}`);
   },
   async sendChat(content: string): Promise<{ success: boolean }> {
     const response = await apiClient.post<{
       success: boolean;
       error?: string;
       message?: string;
-    }>('/api/v1/agent/chat/send', { content });
+    }>('/v1/agent/chat/send', { content });
     const data = response.data;
     if (data.success === false) {
       throw new Error(data.message || '发送失败');
@@ -88,7 +88,7 @@ export const agentApi = {
     options?: ChatStreamOptions,
   ): Promise<Response> {
     const base = API_BASE_URL || '';
-    const url = `${base}/api/v1/agent/chat/stream`;
+    const url = `${base}/v1/agent/chat/stream`;
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -136,4 +136,4 @@ export const agentApi = {
       throw createApiError(parsed, { cause: error });
     }
   },
-};
+};ENDOFFILE

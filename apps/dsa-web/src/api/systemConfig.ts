@@ -131,14 +131,14 @@ function toSnakeDiscoverModelsPayload(payload: DiscoverLLMChannelModelsRequest):
 
 export const systemConfigApi = {
   async getConfig(includeSchema = true): Promise<SystemConfigResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/system/config', {
+    const response = await apiClient.get<Record<string, unknown>>('/v1/system/config', {
       params: { include_schema: includeSchema },
     });
     return toCamelCase<SystemConfigResponse>(response.data);
   },
 
   async exportEnv(): Promise<ExportSystemConfigResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/system/config/export');
+    const response = await apiClient.get<Record<string, unknown>>('/v1/system/config/export');
     return toCamelCase<ExportSystemConfigResponse>(response.data);
   },
 
@@ -147,28 +147,28 @@ export const systemConfigApi = {
   },
 
   async getSchema(): Promise<SystemConfigSchemaResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/system/config/schema');
+    const response = await apiClient.get<Record<string, unknown>>('/v1/system/config/schema');
     return toCamelCase<SystemConfigSchemaResponse>(response.data);
   },
 
   async getSetupStatus(): Promise<SetupStatusResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/system/config/setup/status');
+    const response = await apiClient.get<Record<string, unknown>>('/v1/system/config/setup/status');
     return toCamelCase<SetupStatusResponse>(response.data);
   },
 
   async getSchedulerStatus(): Promise<SchedulerStatusResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/system/scheduler/status');
+    const response = await apiClient.get<Record<string, unknown>>('/v1/system/scheduler/status');
     return toCamelCase<SchedulerStatusResponse>(response.data);
   },
 
   async runSchedulerNow(): Promise<SchedulerRunNowResponse> {
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/system/scheduler/run-now');
+    const response = await apiClient.post<Record<string, unknown>>('/v1/system/scheduler/run-now');
     return toCamelCase<SchedulerRunNowResponse>(response.data);
   },
 
   async validate(payload: ValidateSystemConfigRequest): Promise<ValidateSystemConfigResponse> {
     const response = await apiClient.post<Record<string, unknown>>(
-      '/api/v1/system/config/validate',
+      '/v1/system/config/validate',
       toSnakeValidatePayload(payload),
     );
     return toCamelCase<ValidateSystemConfigResponse>(response.data);
@@ -176,7 +176,7 @@ export const systemConfigApi = {
 
   async importEnv(payload: ImportSystemConfigRequest): Promise<UpdateSystemConfigResponse> {
     const response = await apiClient.post<Record<string, unknown>>(
-      '/api/v1/system/config/import',
+      '/v1/system/config/import',
       toSnakeImportPayload(payload),
     );
     return toCamelCase<UpdateSystemConfigResponse>(response.data);
@@ -188,7 +188,7 @@ export const systemConfigApi = {
 
   async testLLMChannel(payload: TestLLMChannelRequest): Promise<TestLLMChannelResponse> {
     const response = await apiClient.post<Record<string, unknown>>(
-      '/api/v1/system/config/llm/test-channel',
+      '/v1/system/config/llm/test-channel',
       toSnakeTestChannelPayload(payload),
     );
     return toCamelCase<TestLLMChannelResponse>(response.data);
@@ -196,7 +196,7 @@ export const systemConfigApi = {
 
   async testNotificationChannel(payload: TestNotificationChannelRequest): Promise<TestNotificationChannelResponse> {
     const response = await apiClient.post<Record<string, unknown>>(
-      '/api/v1/system/config/notification/test-channel',
+      '/v1/system/config/notification/test-channel',
       toSnakeNotificationTestPayload(payload),
     );
     return toCamelCase<TestNotificationChannelResponse>(response.data);
@@ -206,7 +206,7 @@ export const systemConfigApi = {
     payload: DiscoverLLMChannelModelsRequest,
   ): Promise<DiscoverLLMChannelModelsResponse> {
     const response = await apiClient.post<Record<string, unknown>>(
-      '/api/v1/system/config/llm/discover-models',
+      '/v1/system/config/llm/discover-models',
       toSnakeDiscoverModelsPayload(payload),
     );
     return toCamelCase<DiscoverLLMChannelModelsResponse>(response.data);
@@ -215,7 +215,7 @@ export const systemConfigApi = {
   async update(payload: UpdateSystemConfigRequest): Promise<UpdateSystemConfigResponse> {
     try {
       const response = await apiClient.put<Record<string, unknown>>(
-        '/api/v1/system/config',
+        '/v1/system/config',
         toSnakeUpdatePayload(payload),
       );
       return toCamelCase<UpdateSystemConfigResponse>(response.data);
@@ -252,7 +252,7 @@ export const systemConfigApi = {
    * 获取自选队列股票代码列表
    */
   getWatchlist: async (): Promise<string[]> => {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/stocks/watchlist');
+    const response = await apiClient.get<Record<string, unknown>>('/v1/stocks/watchlist');
     const data = toCamelCase<{ stockCodes: string[] }>(response.data);
     return data.stockCodes || [];
   },
@@ -261,7 +261,7 @@ export const systemConfigApi = {
    * 添加股票到自选队列
    */
   addToWatchlist: async (stockCode: string): Promise<string[]> => {
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/stocks/watchlist/add', {
+    const response = await apiClient.post<Record<string, unknown>>('/v1/stocks/watchlist/add', {
       stock_code: stockCode,
     });
     const data = toCamelCase<{ stockCodes: string[] }>(response.data);
@@ -272,10 +272,10 @@ export const systemConfigApi = {
    * 从自选队列移除股票
    */
   removeFromWatchlist: async (stockCode: string): Promise<string[]> => {
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/stocks/watchlist/remove', {
+    const response = await apiClient.post<Record<string, unknown>>('/v1/stocks/watchlist/remove', {
       stock_code: stockCode,
     });
     const data = toCamelCase<{ stockCodes: string[] }>(response.data);
     return data.stockCodes || [];
   },
-};
+};ENDOFFILE
