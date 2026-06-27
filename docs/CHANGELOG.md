@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- [改进] #1815 Phase 1 硬化日本/韩国 suffix-only 个股 MVP：集中 JP/KR/TW suffix 识别规则，扩充日韩股票种子索引，并为 yfinance 报价/基本面上下文补充市场、币种与数据质量元数据。
 - [修复] 修复通知 Markdown 表格转换在空单元格后将后续内容错配到错误表头的问题。
 - [修复] 将 Docker 可安装的 Longbridge SDK 版本固定为 0.2.75，避免 `longbridge>=0.2.77` 从包索引消失后导致 docker-build 失败。
 - [修复] Web 首页重新分析完成后自动切换到同一股票最新生成的报告，避免仍停留在旧报告内容。

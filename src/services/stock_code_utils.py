@@ -9,6 +9,7 @@ import re
 from typing import Optional
 
 from data_provider.base import canonical_stock_code, is_bse_code
+from src.services.market_symbol_utils import normalize_suffix_market_symbol
 
 
 # Known exchange prefixes (case-insensitive) and the digit lengths they accept.
@@ -120,8 +121,11 @@ def normalize_code(raw: str) -> Optional[str]:
         return None
     if text.isdigit() and len(text) in (5, 6):
         return text
+    suffix_symbol = normalize_suffix_market_symbol(text)
+    if suffix_symbol is not None:
+        return suffix_symbol
     if any(text.endswith(suffix) for suffix in _PRESERVE_SUFFIXES):
-        return text if _strip_exchange_suffix(text) is not None else None
+        return None
     if re.match(r"^[A-Z]{1,5}(?:\.(?:US|[A-Z]))?$", text):
         return text
     stripped_suffix = _strip_exchange_suffix(text)
