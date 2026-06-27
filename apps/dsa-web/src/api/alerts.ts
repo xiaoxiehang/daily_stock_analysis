@@ -130,4 +130,4 @@ export const alertsApi = {
     });
     return toCamelCase<AlertNotificationListResponse>(response.data);
   },
-};ENDOFFILE
+};

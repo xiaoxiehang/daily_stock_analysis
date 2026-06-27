@@ -278,4 +278,4 @@ export const systemConfigApi = {
     const data = toCamelCase<{ stockCodes: string[] }>(response.data);
     return data.stockCodes || [];
   },
-};ENDOFFILE
+};

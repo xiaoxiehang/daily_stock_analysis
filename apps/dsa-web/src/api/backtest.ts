@@ -124,4 +124,4 @@ export const backtestApi = {
       throw err;
     }
   },
-};ENDOFFILE
+};

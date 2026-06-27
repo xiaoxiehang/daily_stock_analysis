@@ -199,4 +199,4 @@ export class DuplicateTaskError extends Error {
     this.stockCode = stockCode;
     this.existingTaskId = existingTaskId;
   }
-}ENDOFFILE
+}

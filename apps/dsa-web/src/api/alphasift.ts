@@ -345,4 +345,4 @@ export const alphasiftApi = {
       throw error;
     }
   },
-};ENDOFFILE
+};
