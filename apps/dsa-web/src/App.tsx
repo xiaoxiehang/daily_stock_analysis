@@ -95,9 +95,10 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  const basename = import.meta.env.BASE_URL;
   return (
     <UiLanguageProvider>
-      <Router>
+      <Router basename={basename}>
         <AuthProvider>
           <AppContent />
         </AuthProvider>
