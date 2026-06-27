@@ -234,21 +234,21 @@ function toLatestStockCodePath(stockCode: string): string {
 export const decisionSignalsApi = {
   async create(payload: DecisionSignalCreateRequest): Promise<DecisionSignalMutationResponse> {
     const response = await apiClient.post<Record<string, unknown>>(
-      '/api/v1/decision-signals',
+      '/v1/decision-signals',
       toSnakeCreatePayload(payload),
     );
     return toDecisionSignalMutationResponse(response.data);
   },
 
   async list(params: DecisionSignalListParams = {}): Promise<DecisionSignalListResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/decision-signals', {
+    const response = await apiClient.get<Record<string, unknown>>('/v1/decision-signals', {
       params: toListParams(params),
     });
     return toDecisionSignalListResponse(response.data);
   },
 
   async get(signalId: number): Promise<DecisionSignalItem> {
-    const response = await apiClient.get<Record<string, unknown>>(`/api/v1/decision-signals/${signalId}`);
+    const response = await apiClient.get<Record<string, unknown>>(`/v1/decision-signals/${signalId}`);
     return toDecisionSignalItem(response.data);
   },
 
@@ -257,7 +257,7 @@ export const decisionSignalsApi = {
     params: DecisionSignalLatestParams = {},
   ): Promise<DecisionSignalListResponse> {
     const response = await apiClient.get<Record<string, unknown>>(
-      `/api/v1/decision-signals/latest/${toLatestStockCodePath(stockCode)}`,
+      `/v1/decision-signals/latest/${toLatestStockCodePath(stockCode)}`,
       { params: toLatestParams(params) },
     );
     return toDecisionSignalListResponse(response.data);
@@ -268,7 +268,7 @@ export const decisionSignalsApi = {
     payload: DecisionSignalStatusUpdateRequest,
   ): Promise<DecisionSignalItem> {
     const response = await apiClient.patch<Record<string, unknown>>(
-      `/api/v1/decision-signals/${signalId}/status`,
+      `/v1/decision-signals/${signalId}/status`,
       toSnakeStatusPayload(payload),
     );
     return toDecisionSignalItem(response.data);
@@ -276,14 +276,14 @@ export const decisionSignalsApi = {
 
   async runOutcomes(payload: DecisionSignalOutcomeRunRequest): Promise<DecisionSignalOutcomeRunResponse> {
     const response = await apiClient.post<Record<string, unknown>>(
-      '/api/v1/decision-signals/outcomes/run',
+      '/v1/decision-signals/outcomes/run',
       toSnakeOutcomeRunPayload(payload),
     );
     return toDecisionSignalOutcomeRunResponse(response.data);
   },
 
   async listOutcomes(params: DecisionSignalOutcomeListParams = {}): Promise<DecisionSignalOutcomeListResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/decision-signals/outcomes', {
+    const response = await apiClient.get<Record<string, unknown>>('/v1/decision-signals/outcomes', {
       params: toOutcomeListParams(params),
     });
     return toDecisionSignalOutcomeListResponse(response.data);
@@ -292,7 +292,7 @@ export const decisionSignalsApi = {
   async getOutcomeStats(
     params: DecisionSignalOutcomeStatsParams = {},
   ): Promise<DecisionSignalOutcomeStatsResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/decision-signals/outcomes/stats', {
+    const response = await apiClient.get<Record<string, unknown>>('/v1/decision-signals/outcomes/stats', {
       params: toOutcomeStatsParams(params),
       paramsSerializer: {
         serialize: serializeRepeatedQueryParams,
@@ -303,14 +303,14 @@ export const decisionSignalsApi = {
 
   async getSignalOutcomes(signalId: number): Promise<DecisionSignalOutcomeListResponse> {
     const response = await apiClient.get<Record<string, unknown>>(
-      `/api/v1/decision-signals/${signalId}/outcomes`,
+      `/v1/decision-signals/${signalId}/outcomes`,
     );
     return toDecisionSignalOutcomeListResponse(response.data);
   },
 
   async getFeedback(signalId: number): Promise<DecisionSignalFeedbackItem> {
     const response = await apiClient.get<Record<string, unknown>>(
-      `/api/v1/decision-signals/${signalId}/feedback`,
+      `/v1/decision-signals/${signalId}/feedback`,
     );
     return toDecisionSignalFeedbackItem(response.data);
   },
@@ -320,7 +320,7 @@ export const decisionSignalsApi = {
     payload: DecisionSignalFeedbackRequest,
   ): Promise<DecisionSignalFeedbackItem> {
     const response = await apiClient.put<Record<string, unknown>>(
-      `/api/v1/decision-signals/${signalId}/feedback`,
+      `/v1/decision-signals/${signalId}/feedback`,
       toSnakeFeedbackPayload(payload),
     );
     return toDecisionSignalFeedbackItem(response.data);

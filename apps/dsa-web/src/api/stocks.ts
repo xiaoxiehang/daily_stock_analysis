@@ -19,7 +19,7 @@ export const stocksApi = {
 
     const headers: { [key: string]: string | undefined } = { 'Content-Type': undefined };
     const response = await apiClient.post(
-      '/api/v1/stocks/extract-from-image',
+      '/v1/stocks/extract-from-image',
       formData,
       {
         headers,
@@ -40,12 +40,12 @@ export const stocksApi = {
       const formData = new FormData();
       formData.append('file', file);
       const headers: { [key: string]: string | undefined } = { 'Content-Type': undefined };
-      const response = await apiClient.post('/api/v1/stocks/parse-import', formData, { headers });
+      const response = await apiClient.post('/v1/stocks/parse-import', formData, { headers });
       const data = response.data as { codes?: string[]; items?: ExtractItem[] };
       return { codes: data.codes ?? [], items: data.items };
     }
     if (text) {
-      const response = await apiClient.post('/api/v1/stocks/parse-import', { text });
+      const response = await apiClient.post('/v1/stocks/parse-import', { text });
       const data = response.data as { codes?: string[]; items?: ExtractItem[] };
       return { codes: data.codes ?? [], items: data.items };
     }

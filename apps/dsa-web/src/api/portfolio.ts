@@ -103,14 +103,14 @@ function buildEventParams(query: EventQuery): Record<string, string | number> {
 
 export const portfolioApi = {
   async getAccounts(includeInactive = false): Promise<PortfolioAccountListResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/portfolio/accounts', {
+    const response = await apiClient.get<Record<string, unknown>>('/v1/portfolio/accounts', {
       params: { include_inactive: includeInactive },
     });
     return toCamelCase<PortfolioAccountListResponse>(response.data);
   },
 
   async createAccount(payload: PortfolioAccountCreateRequest): Promise<PortfolioAccountItem> {
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/portfolio/accounts', {
+    const response = await apiClient.post<Record<string, unknown>>('/v1/portfolio/accounts', {
       name: payload.name,
       broker: payload.broker,
       market: payload.market,
@@ -121,12 +121,12 @@ export const portfolioApi = {
   },
 
   async deleteAccount(accountId: number): Promise<PortfolioDeleteResponse> {
-    const response = await apiClient.delete<Record<string, unknown>>(`/api/v1/portfolio/accounts/${accountId}`);
+    const response = await apiClient.delete<Record<string, unknown>>(`/v1/portfolio/accounts/${accountId}`);
     return toCamelCase<PortfolioDeleteResponse>(response.data);
   },
 
   async getSnapshot(query: SnapshotQuery = {}): Promise<PortfolioSnapshotResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/portfolio/snapshot', {
+    const response = await apiClient.get<Record<string, unknown>>('/v1/portfolio/snapshot', {
       params: buildSnapshotParams(query),
     });
     return toCamelCase<PortfolioSnapshotResponse>(response.data);
@@ -134,7 +134,7 @@ export const portfolioApi = {
 
   async analyzePosition(symbol: string, payload: PortfolioPositionAnalysisRequest = {}): Promise<TaskAccepted> {
     const response = await apiClient.post<Record<string, unknown>>(
-      `/api/v1/portfolio/positions/${encodeURIComponent(symbol)}/analysis`,
+      `/v1/portfolio/positions/${encodeURIComponent(symbol)}/analysis`,
       {
         account_id: payload.accountId,
         analysis_phase: payload.analysisPhase ?? 'auto',
@@ -145,21 +145,21 @@ export const portfolioApi = {
   },
 
   async getRisk(query: SnapshotQuery = {}): Promise<PortfolioRiskResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/portfolio/risk', {
+    const response = await apiClient.get<Record<string, unknown>>('/v1/portfolio/risk', {
       params: buildSnapshotParams(query),
     });
     return toCamelCase<PortfolioRiskResponse>(response.data);
   },
 
   async refreshFx(query: FxRefreshQuery = {}): Promise<PortfolioFxRefreshResponse> {
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/portfolio/fx/refresh', undefined, {
+    const response = await apiClient.post<Record<string, unknown>>('/v1/portfolio/fx/refresh', undefined, {
       params: buildFxRefreshParams(query),
     });
     return toCamelCase<PortfolioFxRefreshResponse>(response.data);
   },
 
   async createTrade(payload: PortfolioTradeCreateRequest): Promise<PortfolioEventCreatedResponse> {
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/portfolio/trades', {
+    const response = await apiClient.post<Record<string, unknown>>('/v1/portfolio/trades', {
       account_id: payload.accountId,
       symbol: payload.symbol,
       trade_date: payload.tradeDate,
@@ -177,12 +177,12 @@ export const portfolioApi = {
   },
 
   async deleteTrade(tradeId: number): Promise<PortfolioDeleteResponse> {
-    const response = await apiClient.delete<Record<string, unknown>>(`/api/v1/portfolio/trades/${tradeId}`);
+    const response = await apiClient.delete<Record<string, unknown>>(`/v1/portfolio/trades/${tradeId}`);
     return toCamelCase<PortfolioDeleteResponse>(response.data);
   },
 
   async createCashLedger(payload: PortfolioCashLedgerCreateRequest): Promise<PortfolioEventCreatedResponse> {
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/portfolio/cash-ledger', {
+    const response = await apiClient.post<Record<string, unknown>>('/v1/portfolio/cash-ledger', {
       account_id: payload.accountId,
       event_date: payload.eventDate,
       direction: payload.direction,
@@ -194,12 +194,12 @@ export const portfolioApi = {
   },
 
   async deleteCashLedger(entryId: number): Promise<PortfolioDeleteResponse> {
-    const response = await apiClient.delete<Record<string, unknown>>(`/api/v1/portfolio/cash-ledger/${entryId}`);
+    const response = await apiClient.delete<Record<string, unknown>>(`/v1/portfolio/cash-ledger/${entryId}`);
     return toCamelCase<PortfolioDeleteResponse>(response.data);
   },
 
   async createCorporateAction(payload: PortfolioCorporateActionCreateRequest): Promise<PortfolioEventCreatedResponse> {
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/portfolio/corporate-actions', {
+    const response = await apiClient.post<Record<string, unknown>>('/v1/portfolio/corporate-actions', {
       account_id: payload.accountId,
       symbol: payload.symbol,
       effective_date: payload.effectiveDate,
@@ -214,7 +214,7 @@ export const portfolioApi = {
   },
 
   async deleteCorporateAction(actionId: number): Promise<PortfolioDeleteResponse> {
-    const response = await apiClient.delete<Record<string, unknown>>(`/api/v1/portfolio/corporate-actions/${actionId}`);
+    const response = await apiClient.delete<Record<string, unknown>>(`/v1/portfolio/corporate-actions/${actionId}`);
     return toCamelCase<PortfolioDeleteResponse>(response.data);
   },
 
@@ -226,7 +226,7 @@ export const portfolioApi = {
     if (query.side) {
       params.side = query.side;
     }
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/portfolio/trades', { params });
+    const response = await apiClient.get<Record<string, unknown>>('/v1/portfolio/trades', { params });
     return toCamelCase<PortfolioTradeListResponse>(response.data);
   },
 
@@ -235,7 +235,7 @@ export const portfolioApi = {
     if (query.direction) {
       params.direction = query.direction;
     }
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/portfolio/cash-ledger', { params });
+    const response = await apiClient.get<Record<string, unknown>>('/v1/portfolio/cash-ledger', { params });
     return toCamelCase<PortfolioCashLedgerListResponse>(response.data);
   },
 
@@ -247,12 +247,12 @@ export const portfolioApi = {
     if (query.actionType) {
       params.action_type = query.actionType;
     }
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/portfolio/corporate-actions', { params });
+    const response = await apiClient.get<Record<string, unknown>>('/v1/portfolio/corporate-actions', { params });
     return toCamelCase<PortfolioCorporateActionListResponse>(response.data);
   },
 
   async listImportBrokers(): Promise<PortfolioImportBrokerListResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/api/v1/portfolio/imports/csv/brokers');
+    const response = await apiClient.get<Record<string, unknown>>('/v1/portfolio/imports/csv/brokers');
     return toCamelCase<PortfolioImportBrokerListResponse>(response.data);
   },
 
@@ -260,7 +260,7 @@ export const portfolioApi = {
     const formData = new FormData();
     formData.append('broker', broker);
     formData.append('file', file);
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/portfolio/imports/csv/parse', formData, {
+    const response = await apiClient.post<Record<string, unknown>>('/v1/portfolio/imports/csv/parse', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return toCamelCase<PortfolioImportParseResponse>(response.data);
@@ -277,7 +277,7 @@ export const portfolioApi = {
     formData.append('broker', broker);
     formData.append('dry_run', dryRun ? 'true' : 'false');
     formData.append('file', file);
-    const response = await apiClient.post<Record<string, unknown>>('/api/v1/portfolio/imports/csv/commit', formData, {
+    const response = await apiClient.post<Record<string, unknown>>('/v1/portfolio/imports/csv/commit', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return toCamelCase<PortfolioImportCommitResponse>(response.data);
