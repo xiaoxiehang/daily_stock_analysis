@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/dsa-web
     steps:
       - uses: actions/checkout@v4
       
@@ -26,5 +29,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: frontend/dist/
+          path: apps/dsa-web/dist/
           retention-days: 7
