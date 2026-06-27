@@ -731,11 +731,28 @@ class YfinanceFetcher(BaseFetcher):
             if high is not None and low is not None and prev_close is not None and prev_close > 0:
                 amplitude = ((high - low) / prev_close) * 100
 
+            try:
+                ticker_info = ticker.info or {}
+            except Exception:
+                ticker_info = {}
+            missing_fields = [
+                field
+                for field, value in {
+                    "price": price,
+                    "prev_close": prev_close,
+                    "volume": volume,
+                    "amount": None,
+                    "pe_ratio": None,
+                    "pb_ratio": None,
+                }.items()
+                if value is None
+            ]
+
             quote = UnifiedRealtimeQuote(
                 code=user_code,
                 name=index_name or user_code,
                 source=RealtimeSource.FALLBACK,
-                market=suffix_market or ("us" if is_us_symbol else None),
+                market="us",
                 currency=str(ticker_info.get("currency") or "").upper() or None,
                 data_quality="partial" if missing_fields else "ok",
                 missing_fields=missing_fields or None,
