@@ -141,7 +141,7 @@ def normalize_code(raw: str) -> Optional[str]:
 def resolve_index_stock_code_for_analysis(raw: str) -> str:
     """Resolve bare JP/KR candidates via stock index and keep suffix forms.
 
-    For code-like inputs:
+    For code-like inputs and indexed 4-digit JP bare bases:
     - Existing index-backed entries (e.g. ``005930`` -> ``005930.KS``) are
       preferred.
     - Non-matching code-like inputs keep the canonicalized input.
@@ -153,7 +153,7 @@ def resolve_index_stock_code_for_analysis(raw: str) -> str:
     if not text:
         return ""
 
-    if is_code_like(text):
+    if is_code_like(text) or (text.isdigit() and len(text) == 4):
         from src.data.stock_index_loader import resolve_index_stock_code
 
         resolved = resolve_index_stock_code(text)
