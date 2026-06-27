@@ -95,7 +95,7 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  const basename = import.meta.env.BASE_URL;
+  const basename = '/dsa';
   return (
     <UiLanguageProvider>
       <Router basename={basename}>

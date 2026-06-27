@@ -3125,6 +3125,13 @@ def extra_litellm_params(model: str, config: Config) -> Dict[str, Any]:
     # deepseek/ provider: litellm auto-resolves api_base, no manual override needed
     if model.startswith("deepseek/"):
         return params
+    # anthropic/ provider with custom base URL (e.g. DashScope)
+    if model.startswith("anthropic/"):
+        import os
+        anthropic_base = os.environ.get("ANTHROPIC_BASE_URL")
+        if anthropic_base:
+            params["api_base"] = anthropic_base
+        return params
     if model.startswith("openai/") or "/" not in model:
         if config.openai_base_url:
             params["api_base"] = config.openai_base_url
