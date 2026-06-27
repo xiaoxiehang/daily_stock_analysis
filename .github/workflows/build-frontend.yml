@@ -1,13 +1,21 @@
-name: Build Frontend
+name: Build and Deploy Frontend
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     defaults:
       run:
         working-directory: ./apps/dsa-web
@@ -24,10 +32,17 @@ jobs:
         
       - name: Build frontend
         run: npm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: frontend-dist
-          path: apps/dsa-web/dist/
-          retention-days: 7
+          path: apps/dsa-web/dist
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
