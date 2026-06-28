@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../utils/constants';
 import { attachParsedApiError } from './error';
 
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL ? `${API_BASE_URL}/` : '/',
   timeout: 30000,
   withCredentials: true,
   headers: {
