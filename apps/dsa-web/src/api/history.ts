@@ -33,7 +33,7 @@ export const historyApi = {
     if (startDate) queryParams.start_date = startDate;
     if (endDate) queryParams.end_date = endDate;
 
-    const response = await apiClient.get<Record<string, unknown>>('/v1/history', {
+    const response = await apiClient.get<Record<string, unknown>>('v1/history', {
       params: queryParams,
     });
 
@@ -51,7 +51,7 @@ export const historyApi = {
    * @param recordId 分析历史记录主键 ID（使用 ID 而非 query_id，因为 query_id 在批量分析时可能重复）
    */
   getDetail: async (recordId: number): Promise<AnalysisReport> => {
-    const response = await apiClient.get<Record<string, unknown>>(`/v1/history/${recordId}`);
+    const response = await apiClient.get<Record<string, unknown>>(`v1/history/${recordId}`);
     return toCamelCase<AnalysisReport>(response.data);
   },
 
@@ -61,7 +61,7 @@ export const historyApi = {
    * @param limit 返回数量限制
    */
   getNews: async (recordId: number, limit = 20): Promise<NewsIntelResponse> => {
-    const response = await apiClient.get<Record<string, unknown>>(`/v1/history/${recordId}/news`, {
+    const response = await apiClient.get<Record<string, unknown>>(`v1/history/${recordId}/news`, {
       params: { limit },
     });
 
@@ -78,7 +78,7 @@ export const historyApi = {
    * @returns Markdown 格式的完整报告内容
    */
   getMarkdown: async (recordId: number): Promise<string> => {
-    const response = await apiClient.get<{ content: string }>(`/v1/history/${recordId}/markdown`);
+    const response = await apiClient.get<{ content: string }>(`v1/history/${recordId}/markdown`);
     return response.data.content;
   },
 
@@ -87,7 +87,7 @@ export const historyApi = {
    * @param recordId 分析历史记录主键 ID
    */
   getDiagnostics: async (recordId: number): Promise<RunDiagnosticSummary> => {
-    const response = await apiClient.get<Record<string, unknown>>(`/v1/history/${recordId}/diagnostics`);
+    const response = await apiClient.get<Record<string, unknown>>(`v1/history/${recordId}/diagnostics`);
     return toCamelCase<RunDiagnosticSummary>(response.data);
   },
 
@@ -96,7 +96,7 @@ export const historyApi = {
    * @param recordId 分析历史记录主键 ID
    */
   getRecordFlow: async (recordId: number): Promise<RunFlowSnapshot> => {
-    const response = await apiClient.get<Record<string, unknown>>(`/v1/history/${recordId}/flow`);
+    const response = await apiClient.get<Record<string, unknown>>(`v1/history/${recordId}/flow`);
     return toCamelCase<RunFlowSnapshot>(response.data);
   },
 
@@ -105,7 +105,7 @@ export const historyApi = {
    * @param recordIds 分析历史记录主键 ID 列表
    */
   deleteRecords: async (recordIds: number[]): Promise<{ deleted: number }> => {
-    const response = await apiClient.delete<Record<string, unknown>>('/v1/history', {
+    const response = await apiClient.delete<Record<string, unknown>>('v1/history', {
       data: { record_ids: recordIds },
     });
 
@@ -117,7 +117,7 @@ export const historyApi = {
    * @param stockCode 股票代码
    */
   deleteByCode: async (stockCode: string): Promise<{ deleted: number }> => {
-    const response = await apiClient.delete<Record<string, unknown>>(`/v1/history/by-code/${encodeURIComponent(stockCode)}`);
+    const response = await apiClient.delete<Record<string, unknown>>(`v1/history/by-code/${encodeURIComponent(stockCode)}`);
     return toCamelCase<{ deleted: number }>(response.data);
   },
 
@@ -134,7 +134,7 @@ export const historyApi = {
     if (params.endDate) queryParams.end_date = params.endDate;
     if (params.limit) queryParams.limit = params.limit;
 
-    const response = await apiClient.get<Record<string, unknown>>('/v1/history/stocks', {
+    const response = await apiClient.get<Record<string, unknown>>('v1/history/stocks', {
       params: queryParams,
     });
 

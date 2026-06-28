@@ -38,7 +38,7 @@ export const analysisApi = {
     };
 
     const response = await apiClient.post<Record<string, unknown>>(
-      '/v1/analysis/analyze',
+      'v1/analysis/analyze',
       requestData
     );
 
@@ -74,7 +74,7 @@ export const analysisApi = {
     };
 
     const response = await apiClient.post<Record<string, unknown>>(
-      '/v1/analysis/analyze',
+      'v1/analysis/analyze',
       requestData,
       {
         // Allow 202 accepted responses in addition to standard success codes.
@@ -101,7 +101,7 @@ export const analysisApi = {
    */
   triggerMarketReview: async (data: MarketReviewRequest = {}): Promise<MarketReviewAccepted> => {
     const response = await apiClient.post<Record<string, unknown>>(
-      '/v1/analysis/market-review',
+      'v1/analysis/market-review',
       {
         send_notification: data.sendNotification ?? true,
         report_language: data.reportLanguage,
@@ -128,7 +128,7 @@ export const analysisApi = {
    */
   getStatus: async (taskId: string): Promise<TaskStatus> => {
     const response = await apiClient.get<Record<string, unknown>>(
-      `/v1/analysis/status/${taskId}`
+      `v1/analysis/status/${taskId}`
     );
 
     const data = toCamelCase<TaskStatus>(response.data);
@@ -153,7 +153,7 @@ export const analysisApi = {
     limit?: number;
   }): Promise<TaskListResponse> => {
     const response = await apiClient.get<Record<string, unknown>>(
-      '/v1/analysis/tasks',
+      'v1/analysis/tasks',
       { params }
     );
 
@@ -168,7 +168,7 @@ export const analysisApi = {
    */
   getTaskFlow: async (taskId: string): Promise<RunFlowSnapshot> => {
     const response = await apiClient.get<Record<string, unknown>>(
-      `/v1/analysis/tasks/${encodeURIComponent(taskId)}/flow`
+      `v1/analysis/tasks/${encodeURIComponent(taskId)}/flow`
     );
 
     return toCamelCase<RunFlowSnapshot>(response.data);

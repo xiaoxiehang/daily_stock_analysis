@@ -10,7 +10,7 @@ export type AuthStatusResponse = {
 
 export const authApi = {
   async getStatus(): Promise<AuthStatusResponse> {
-    const { data } = await apiClient.get<AuthStatusResponse>('/v1/auth/status');
+    const { data } = await apiClient.get<AuthStatusResponse>('v1/auth/status');
     return data;
   },
 
@@ -35,7 +35,7 @@ export const authApi = {
     if (currentPassword !== undefined) {
       body.currentPassword = currentPassword;
     }
-    const { data } = await apiClient.post<AuthStatusResponse>('/v1/auth/settings', body);
+    const { data } = await apiClient.post<AuthStatusResponse>('v1/auth/settings', body);
     return data;
   },
 
@@ -44,7 +44,7 @@ export const authApi = {
     if (passwordConfirm !== undefined) {
       body.passwordConfirm = passwordConfirm;
     }
-    await apiClient.post('/v1/auth/login', body);
+    await apiClient.post('v1/auth/login', body);
   },
 
   async changePassword(
@@ -52,7 +52,7 @@ export const authApi = {
     newPassword: string,
     newPasswordConfirm: string
   ): Promise<void> {
-    await apiClient.post('/v1/auth/change-password', {
+    await apiClient.post('v1/auth/change-password', {
       currentPassword,
       newPassword,
       newPasswordConfirm,
@@ -60,6 +60,6 @@ export const authApi = {
   },
 
   async logout(): Promise<void> {
-    await apiClient.post('/v1/auth/logout');
+    await apiClient.post('v1/auth/logout');
   },
 };

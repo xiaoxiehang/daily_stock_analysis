@@ -34,7 +34,7 @@ jobs:
         run: npm run build
         env:
           NODE_OPTIONS: --max-old-space-size=4096
-          VITE_API_URL: /dsa
+          VITE_API_URL: /dsa/api
         
       - name: Setup Pages
         uses: actions/configure-pages@v4

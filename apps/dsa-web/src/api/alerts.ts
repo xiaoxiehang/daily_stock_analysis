@@ -83,7 +83,7 @@ function toNotificationListParams(query: AlertNotificationListQuery = {}): Recor
 
 export const alertsApi = {
   async listRules(query: AlertRuleListQuery = {}): Promise<AlertRuleListResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/v1/alerts/rules', {
+    const response = await apiClient.get<Record<string, unknown>>('v1/alerts/rules', {
       params: toRuleListParams(query),
     });
     return toCamelCase<AlertRuleListResponse>(response.data);
@@ -91,41 +91,41 @@ export const alertsApi = {
 
   async createRule(payload: AlertRuleCreateRequest): Promise<AlertRuleItem> {
     const response = await apiClient.post<Record<string, unknown>>(
-      '/v1/alerts/rules',
+      'v1/alerts/rules',
       toSnakeRulePayload(payload),
     );
     return toCamelCase<AlertRuleItem>(response.data);
   },
 
   async deleteRule(ruleId: number): Promise<AlertDeleteResponse> {
-    const response = await apiClient.delete<Record<string, unknown>>(`/v1/alerts/rules/${ruleId}`);
+    const response = await apiClient.delete<Record<string, unknown>>(`v1/alerts/rules/${ruleId}`);
     return toCamelCase<AlertDeleteResponse>(response.data);
   },
 
   async enableRule(ruleId: number): Promise<AlertRuleItem> {
-    const response = await apiClient.post<Record<string, unknown>>(`/v1/alerts/rules/${ruleId}/enable`);
+    const response = await apiClient.post<Record<string, unknown>>(`v1/alerts/rules/${ruleId}/enable`);
     return toCamelCase<AlertRuleItem>(response.data);
   },
 
   async disableRule(ruleId: number): Promise<AlertRuleItem> {
-    const response = await apiClient.post<Record<string, unknown>>(`/v1/alerts/rules/${ruleId}/disable`);
+    const response = await apiClient.post<Record<string, unknown>>(`v1/alerts/rules/${ruleId}/disable`);
     return toCamelCase<AlertRuleItem>(response.data);
   },
 
   async testRule(ruleId: number): Promise<AlertRuleTestResponse> {
-    const response = await apiClient.post<Record<string, unknown>>(`/v1/alerts/rules/${ruleId}/test`);
+    const response = await apiClient.post<Record<string, unknown>>(`v1/alerts/rules/${ruleId}/test`);
     return toCamelCase<AlertRuleTestResponse>(response.data);
   },
 
   async listTriggers(query: AlertTriggerListQuery = {}): Promise<AlertTriggerListResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/v1/alerts/triggers', {
+    const response = await apiClient.get<Record<string, unknown>>('v1/alerts/triggers', {
       params: toTriggerListParams(query),
     });
     return toCamelCase<AlertTriggerListResponse>(response.data);
   },
 
   async listNotifications(query: AlertNotificationListQuery = {}): Promise<AlertNotificationListResponse> {
-    const response = await apiClient.get<Record<string, unknown>>('/v1/alerts/notifications', {
+    const response = await apiClient.get<Record<string, unknown>>('v1/alerts/notifications', {
       params: toNotificationListParams(query),
     });
     return toCamelCase<AlertNotificationListResponse>(response.data);

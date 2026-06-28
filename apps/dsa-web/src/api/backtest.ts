@@ -26,7 +26,7 @@ export const backtestApi = {
     if (params.limit != null) requestData.limit = params.limit;
 
     const response = await apiClient.post<Record<string, unknown>>(
-      '/v1/backtest/run',
+      'v1/backtest/run',
       requestData,
     );
     return toCamelCase<BacktestRunResponse>(response.data);
@@ -54,7 +54,7 @@ export const backtestApi = {
     if (analysisPhase && analysisPhase !== 'all') queryParams.analysis_phase = analysisPhase;
 
     const response = await apiClient.get<Record<string, unknown>>(
-      '/v1/backtest/results',
+      'v1/backtest/results',
       { params: queryParams },
     );
 
@@ -83,7 +83,7 @@ export const backtestApi = {
       if (params.analysisDateTo) queryParams.analysis_date_to = params.analysisDateTo;
       if (params.analysisPhase && params.analysisPhase !== 'all') queryParams.analysis_phase = params.analysisPhase;
       const response = await apiClient.get<Record<string, unknown>>(
-        '/v1/backtest/performance',
+        'v1/backtest/performance',
         { params: queryParams },
       );
       return toCamelCase<PerformanceMetrics>(response.data);
@@ -112,7 +112,7 @@ export const backtestApi = {
       if (params.analysisDateTo) queryParams.analysis_date_to = params.analysisDateTo;
       if (params.analysisPhase && params.analysisPhase !== 'all') queryParams.analysis_phase = params.analysisPhase;
       const response = await apiClient.get<Record<string, unknown>>(
-        `/v1/backtest/performance/${encodeURIComponent(code)}`,
+        `v1/backtest/performance/${encodeURIComponent(code)}`,
         { params: queryParams },
       );
       return toCamelCase<PerformanceMetrics>(response.data);

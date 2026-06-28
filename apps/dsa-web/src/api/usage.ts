@@ -46,7 +46,7 @@ export type UsageDashboard = {
 
 export const usageApi = {
   getDashboard: async (params: { period?: UsagePeriod; limit?: number } = {}): Promise<UsageDashboard> => {
-    const response = await apiClient.get<Record<string, unknown>>('/v1/usage/dashboard', {
+    const response = await apiClient.get<Record<string, unknown>>('v1/usage/dashboard', {
       params: {
         period: params.period ?? 'month',
         limit: params.limit ?? 50,
